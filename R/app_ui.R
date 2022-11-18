@@ -96,7 +96,7 @@ app_ui <- function() {
             br()
           ),
           fluidRow(
-            mod_submission_map_ui("submission_map")
+            mod_progress_ui("progress")
           )
         )
       )

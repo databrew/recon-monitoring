@@ -9,7 +9,7 @@
 #' @keywords internal
 #' @export
 # UI FOR MOST RECENT VALUE RADAR PLOT
-mod_submission_map_ui <- function(id){
+mod_progress_ui <- function(id){
   # let leaflet know that selections should persist
   # options(persistent = TRUE)
   ns <- NS(id)
@@ -50,7 +50,7 @@ mod_submission_map_ui <- function(id){
 }
 
 # SERVER FOR MOST RECENT VALUE MAP
-mod_submission_map_server <- function(input, output, session){
+mod_progress_server <- function(input, output, session){
 
   svc <- paws::s3()
   filepath <- glue::glue(tempdir,"reconbhousehold.csv")
