@@ -2,7 +2,7 @@
 % Please edit documentation in R/mod_progress.R
 \name{mod_progress_ui}
 \alias{mod_progress_ui}
-\title{mod_map.R}
+\title{mod_progress.R}
 \usage{
 mod_progress_ui(id)
 }
@@ -18,4 +18,3 @@ mod_progress_ui(id)
 \description{
 A shiny Module.
 }
-\keyword{internal}

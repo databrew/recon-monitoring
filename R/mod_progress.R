@@ -1,13 +1,11 @@
-# Module radar
-#' @title mod_map.R
+# Module progress
+#' @title mod_progress.R
 #' @description  A shiny Module.
 #'
 #' @param id shiny id
 #' @param input internal
 #' @param output internal
 #' @param session internal
-#' @keywords internal
-#' @export
 # UI FOR MOST RECENT VALUE RADAR PLOT
 mod_progress_ui <- function(id){
   # let leaflet know that selections should persist
@@ -16,10 +14,22 @@ mod_progress_ui <- function(id){
   tagList(
     fluidPage(
       fluidRow(
-        column(3, pickerInput(ns("ward"), "Select Ward:", "", multiple = TRUE, options = list(`actions-box` = TRUE)), style="z-index:1002;"),
-        column(3, pickerInput(ns("community_health_unit"), "Select CHU:", "", multiple = TRUE, options = list(`actions-box` = TRUE)), style="z-index:1002;"),
-        column(3, pickerInput(ns("village"), "Select Village:", "", multiple = TRUE, options = list(`actions-box` = TRUE)), style="z-index:1002;"),
-        column(1, actionBttn(ns("submit"), "Submit Selection", color = "primary", style = 'simple'))
+        column(3, pickerInput(ns("ward"), "Select Ward:", "",
+                              multiple = TRUE,
+                              options = list(`actions-box` = TRUE)),
+               style="z-index:1002;"),
+        column(3, pickerInput(ns("community_health_unit"), "Select CHU:", "",
+                              multiple = TRUE,
+                              options = list(`actions-box` = TRUE)),
+               style="z-index:1002;"),
+        column(3, pickerInput(ns("village"), "Select Village:", "",
+                              multiple = TRUE,
+                              options = list(`actions-box` = TRUE)),
+               style="z-index:1002;"),
+        column(1, actionBttn(ns("submit"),
+                             "Submit Selection",
+                             color = "primary",
+                             style = 'simple'))
       ),
       br(),
       fluidRow(
@@ -39,7 +49,9 @@ mod_progress_ui <- function(id){
           width = NULL, status = "primary", solidHeader = TRUE)),
         column(6, box(
           title = 'Submission by Group',
-          selectInput(ns("filter_group"), "View by:", choices = c('ward', 'community_health_unit', 'village'), selected = 'Ward'),
+          selectInput(ns("filter_group"), "View by:",
+                      choices = c('ward', 'community_health_unit', 'village'),
+                      selected = 'Ward'),
           plotlyOutput(ns('submission_by_filter'), height = 300),
           width = NULL, status = "primary", solidHeader = TRUE))
 
@@ -51,14 +63,7 @@ mod_progress_ui <- function(id){
 
 # SERVER FOR MOST RECENT VALUE MAP
 mod_progress_server <- function(input, output, session){
-
-  svc <- paws::s3()
-  filepath <- glue::glue(tempdir,"reconbhousehold.csv")
-  svc$download_file(
-    Bucket = "dbrew-testdatabrew.org",
-    Key = "kwale/raw-form/reconbhousehold/reconbhousehold.csv",
-    Filename = filepath)
-  data <-  read.csv(filepath) %>%
+  data <-  get_kwale_file(type = 'household') %>%
     tibble::as_tibble(.name_repair = "unique") %>%
     dplyr::mutate(ward = ifelse(ward == "", "N/A", ward),
                   community_health_unit = ifelse(community_health_unit == "", "N/A", community_health_unit),
@@ -127,14 +132,6 @@ mod_progress_server <- function(input, output, session){
       dplyr::filter(community_health_unit %in% input$community_health_unit) %>%
       dplyr::filter(village %in% input$village)
   }, ignoreNULL=FALSE)
-
-  observe({
-    print(input$submit)
-    print(values$filter_data)
-    print(values$ward_list)
-    print(values$communi)
-  })
-
 
   # ---- RENDER PLOT FROM REACTIVE DATA ---- #
   output$map_plot <- renderLeaflet({
