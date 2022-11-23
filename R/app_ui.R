@@ -76,8 +76,7 @@ app_ui <- function() {
       tabItem(tabName = "about",
               h1("Welcome to the Recon Monitoring RShiny App!"),
               br(),
-              h2("How-To:"),
-              div("1. Go to the 'Annotator-App' Tab"),
+              h2("Guidelines:"),
               br(),
               h2("References:")
       ),
