@@ -30,7 +30,8 @@ Imports:
     shinyjs,
     shinydashboard,
     shinyalert,
-    mapview
+    mapview,
+    paws
 RoxygenNote: 7.2.2
 Remotes:
   ricardo-bion/ggradar,
