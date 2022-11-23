@@ -1,8 +1,8 @@
 Package: reconmonitoring
 Title: Recon Monitoring ShinyApp
 Version: 0.0.0.9000
-Authors@R: person('Joe', 'Brew', email = 'joe@databrew.cc', role = c('cre', 'aut'))
-Description: A Shiny app / R package for the visualization of the World Bank's Health Equity and Financial Protection Indicators
+Authors@R: person('Aryton', 'Tediarjo', email = 'atediarjo@gmail.com', role = c('cre', 'aut'))
+Description: A Shiny app / R package for Reon Monitoring
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -38,8 +38,6 @@ Remotes:
   ricardo-bion/ggradar,
   aoles/shinyURL,
   r-spatial/mapview
-URL: https://github.com/databrew/hefpi
-BugReports: https://github.com/databrew/hefpi/issues
 Suggests: 
     testthat (>= 2.1.0),
     knitr,

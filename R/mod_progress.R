@@ -63,7 +63,12 @@ mod_progress_ui <- function(id){
 
 # SERVER FOR MOST RECENT VALUE MAP
 mod_progress_server <- function(input, output, session){
-  data <-  get_kwale_file(type = 'household') %>%
+  filename <- tempfile(fileext = '.csv')
+  data <-  get_s3_data(s3obj = paws::s3(),
+                       bucket = 'databrew.org',
+                       object_key = "kwale/raw-form/reconbhousehold/reconbhousehold.csv",
+                       filename = filename) %>%
+    read.csv(.) %>%
     tibble::as_tibble(.name_repair = "unique") %>%
     dplyr::mutate(ward = ifelse(ward == "", "N/A", ward),
                   community_health_unit = ifelse(community_health_unit == "", "N/A", community_health_unit),
