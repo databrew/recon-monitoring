@@ -32,7 +32,7 @@ Imports:
     shinyalert
 RoxygenNote: 7.2.2
 Remotes:
-  ricardo-bion/ggradar
+  ricardo-bion/ggradar,
   aoles/shinyURL
 URL: https://github.com/databrew/hefpi
 BugReports: https://github.com/databrew/hefpi/issues
