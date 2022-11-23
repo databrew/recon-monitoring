@@ -3,8 +3,7 @@
 #' @import config
 #' @import glue
 get_kwale_file <- function(type){
-  config_path <- file.path('inst/config.yml')
-  cf <- config::get(file = config_path)
+  cf <- config::get(file = 'inst/config.yml')
   svc <- paws::s3()
   filepath <- tempfile(fileext = '.csv')
   svc$download_file(
