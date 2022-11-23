@@ -73,20 +73,11 @@ app_ui <- function() {
     tabItems(
       tabItem(tabName = "about",
               h1("Welcome to the Recon Monitoring RShiny App!"),
-              div("This app will help you go through Synapse Table-Attached Files and"),
-              div("based on your desired visualization for the files, the app will help you annotate each"),
-              div("scores/labels/information about the visualizations"),
               br(),
               h2("How-To:"),
               div("1. Go to the 'Annotator-App' Tab"),
-              div("2. You can go through each image by using arrows"),
-              div("3. Score accordingly based on each prompts based on the right-side button UI"),
-              div("4. When finished, you can save the images by pressing 'Save Results' button"),
-              div("5. After saving, we will fetch you more data into the session"),
               br(),
-              h2("References:"),
-              tags$a(href="https://github.com/Sage-Bionetworks/mhealthannotator",
-                     "Link to GitHub Package")
+              h2("References:")
       ),
       tabItem(
         tabName="progress",

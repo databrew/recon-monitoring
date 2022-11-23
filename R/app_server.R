@@ -11,7 +11,6 @@
 #' @import purrr
 #' @noRd
 app_server <- function(input, output, session) {
-  Sys.setenv(AWS_PROFILE = "dbrew-prod")
   callModule(mod_progress_server, 'progress')
   # callModule(mod_submission_by_day_server, 'submission_by_day_plot')
   # Your application server logic
