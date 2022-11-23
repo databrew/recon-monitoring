@@ -2,6 +2,11 @@ default:
   golem_name: reconmonitoring
   golem_version: 0.0.0.9000
   app_prod: no
+  s3:
+    bucket_name: "databrew.org"
+    keys:
+      household: "kwale/raw-form/reconbhousehold/reconbhousehold.csv"
+      registration: "kwale/raw-form/reconaregistration/reconaregistration.csv"
 production:
   app_prod: yes
 dev:
