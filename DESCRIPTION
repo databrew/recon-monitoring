@@ -31,7 +31,8 @@ Imports:
     shinydashboard,
     shinyalert,
     mapview,
-    paws
+    paws,
+    waiter
 RoxygenNote: 7.2.2
 Remotes:
   ricardo-bion/ggradar,
@@ -48,7 +49,6 @@ Suggests:
     ggimage,
     stringr,
     forcats,
-    waiter,
     hexSticker,
     processx,
     attempt
