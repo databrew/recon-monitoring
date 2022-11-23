@@ -12,4 +12,4 @@ golem::detach_all_attached()
 golem::document_and_reload()
 
 # Run the application
-reconmonitoring::run_app()
+run_app(config = 'inst/config.yml')

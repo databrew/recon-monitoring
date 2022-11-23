@@ -3,8 +3,7 @@
 #' @import config
 #' @import glue
 get_kwale_file <- function(type){
-  config_path <- file.path(
-    golem::get_golem_options("config"))
+  config_path <- file.path('inst/config.yml')
   cf <- config::get(file = config_path)
   svc <- paws::s3()
   filepath <- tempfile(fileext = '.csv')
