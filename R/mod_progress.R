@@ -66,7 +66,7 @@ mod_progress_server <- function(input, output, session){
   filename <- tempfile(fileext = '.csv')
   data <-  get_s3_data(s3obj = paws::s3(),
                        bucket = 'databrew.org',
-                       object_key = "kwale/raw-form/reconbhousehold/reconbhousehold.csv",
+                       object_key = "kwale/raw-form/reconbhouseholdtraining/reconbhouseholdtraining.csv",
                        filename = filename) %>%
     read.csv(.) %>%
     tibble::as_tibble(.name_repair = "unique") %>%
@@ -157,7 +157,8 @@ mod_progress_server <- function(input, output, session){
 
     data <- data %>%
       as_tibble(.name_repair = "universal") %>%
-      dplyr::filter(!is.na(Latitude))
+      dplyr::filter(!is.na(Latitude)) %>%
+      dplyr::select(ward, Latitude, Longitude ,community_health_unit, village)
 
     if(nrow(data) > 0){
       mapv <- mapview(
@@ -216,16 +217,23 @@ mod_progress_server <- function(input, output, session){
       dplyr::summarise(n = n())
 
 
-    p <- ggplotly(tibble(day_of_week = c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')) %>%
+    p <- ggplotly(tibble(day_of_week = c('Monday',
+                                         'Tuesday',
+                                         'Wednesday',
+                                         'Thursday',
+                                         'Friday',
+                                         'Saturday',
+                                         'Sunday')) %>%
                     dplyr::left_join(summary) %>%
                     dplyr::mutate(n = ifelse(is.na(n), 0, n),
                                   ord = row_number(),
                                   day_of_week = fct_reorder(day_of_week, ord)) %>%
                     ggplot(aes(x = day_of_week, y = n)) +
-                    geom_bar(stat = 'identity', fill = 'darkgrey') +
+                    geom_bar(stat = 'identity', fill = 'dodgerblue4') +
                     scale_y_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
                     theme_minimal() +
-                    labs(x = "", y = ""))
+                    labs(x = "", y = "") +
+                    theme(axis.text.x = element_text(angle=45, hjust=1)))
     p
   })
 
@@ -241,10 +249,11 @@ mod_progress_server <- function(input, output, session){
       dplyr::summarise(n = n())
     p <- ggplotly(summary %>%
                     ggplot2::ggplot(aes_string(x = input$filter_group, y = "n")) +
-                    geom_bar(stat = 'identity', fill = 'darkgrey') +
+                    geom_bar(stat = 'identity', fill = 'dodgerblue4') +
                     scale_y_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
                     theme_minimal() +
-                    labs(x = "", y = ""))
+                    labs(x = "", y = "") +
+                    theme(axis.text.x = element_text(angle=45, hjust=1)))
     p
   })
 
