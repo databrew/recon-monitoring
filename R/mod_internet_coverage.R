@@ -15,21 +15,21 @@ mod_internet_coverage_ui <- function(id){
         column(6, box(
           title = 'Time Lag Distribution',
           plotlyOutput(ns('time_lag_dist'), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE)),
+          width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'Time Lag Distribution by Ward',
           plotlyOutput(ns('time_lag_dist_by_ward'), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE))
+          width = NULL, solidHeader= TRUE, ))
       ),
       fluidRow(
         column(6, box(
           title = 'Time Lag Raw Table',
           DT::dataTableOutput(ns("time_lag_table"), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE)),
+          width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'Lag Map',
           leafletOutput(ns('lag_map_plot'), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE))
+          width = NULL, solidHeader= TRUE, ))
       )
     )
 
@@ -75,7 +75,7 @@ mod_internet_coverage_server <- function(input, output, session){
           ggplot(aes(x = ward, y = lag, fill = ward)) +
           geom_boxplot(alpha = 0.8, colour = "grey50") +
           theme_minimal() +
-          scale_fill_brewer(palette="Accent") +
+          scale_fill_brewer(palette="Dark2") +
           labs(x = "", y = "lag (seconds)") +
           theme(legend.position = "none") +
           theme(axis.text.x = element_text(angle=45, hjust=1))
@@ -127,9 +127,7 @@ mod_internet_coverage_server <- function(input, output, session){
         map_plot <- mapv + mapview(NULL,
                                    crs = 4269,
                                    grid = FALSE)
-
         map_plot@map
-
       }else{
         mapview(NULL,
                 crs = 4269,

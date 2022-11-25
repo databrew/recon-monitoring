@@ -28,35 +28,38 @@ mod_progress_ui <- function(id){
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
-               style="z-index:1002;"),
-        column(1, actionBttn(ns("submit"),
+               style="z-index:1002;")
+      ),
+      fluidRow(
+        column(3, actionBttn(ns("submit"),
                              "Submit Selection",
                              color = "primary",
                              style = 'simple'))
+
       ),
       br(),
       fluidRow(
         column(6, box(
           title = 'Map of Submissions',
           leafletOutput(ns('map_plot'), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE)),
+          width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'Cumulative Submissions',
           plotlyOutput(ns('cumulative_submission'), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE))
+          width = NULL, solidHeader= TRUE, ))
       ),
       fluidRow(
         column(6, box(
           title = 'Submission by Day',
           plotlyOutput(ns('submission_by_day'), height = 380),
-          width = NULL, status = "primary", solidHeader = TRUE)),
+          width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'Submission by Group',
           selectInput(ns("filter_group"), "View by:",
                       choices = c('ward', 'community_health_unit', 'village'),
                       selected = 'Ward'),
           plotlyOutput(ns('submission_by_filter'), height = 300),
-          width = NULL, status = "primary", solidHeader = TRUE))
+          width = NULL, solidHeader= TRUE, ))
 
       )
     )
@@ -262,7 +265,7 @@ mod_progress_server <- function(input, output, session){
                     labs(x = "", y = "") +
                     theme(axis.text.x = element_text(angle=45, hjust=1),
                           legend.position = "none") +
-                    scale_fill_brewer(palette="Accent")
+                    scale_fill_brewer(palette="Dark2")
                     )
     p
   })

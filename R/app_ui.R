@@ -43,8 +43,8 @@ app_ui <- function() {
           icon = shiny::icon("angle-right")
         ),
         menuSubItem(
-          text="Anomalities",
-          tabName="anomalities",
+          text="Anomalies",
+          tabName="anomalies",
           icon = shiny::icon("angle-right")
         ),
         menuSubItem(
@@ -68,6 +68,31 @@ app_ui <- function() {
     use_waiter(),
     waiter_show_on_load(color = "#002244"),
     golem_add_external_resources(),
+
+    tags$head(tags$style(HTML('
+                                /* logo */
+                                .skin-blue .main-header .logo {
+                                background-color: #003366;
+                                }
+
+                                /* navbar (rest of the header) */
+                                .skin-blue .main-header .navbar {
+                                background-color: #006699;
+                                }
+
+                                /* body */
+                                .content-wrapper, .right-side {
+                                background-color: #ffffff;
+                                }
+
+                                .box-header h3.box-title {
+                                  font-weight: bold;
+                                  font-size: 24px;
+                                }
+
+                                '))),
+
+
     tabItems(
       tabItem(tabName = "about",
               h1("Recon Monitoring Dashboard"),
@@ -91,6 +116,18 @@ app_ui <- function() {
           ),
           fluidRow(
             mod_progress_ui("household")
+          )
+        )
+      ),
+      tabItem(
+        tabName="anomalies",
+        fluidPage(
+          fluidRow(
+            h2("Anomalies"),
+            br()
+          ),
+          fluidRow(
+            mod_anomalies_ui("anomalies")
           )
         )
       ),

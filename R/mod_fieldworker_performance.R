@@ -21,32 +21,37 @@ mod_fieldworker_performance_ui <- function(id){
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
-               style="z-index:1002;"),
-        column(1, actionBttn(ns("submit"),
+               style="z-index:1002;")
+      ),
+
+      fluidRow(
+        column(3, actionBttn(ns("submit"),
                              "Submit Selection",
                              color = "primary",
                              style = 'simple'))
       ),
 
+      br(),
+
       fluidRow(
         column(6, box(
           title = 'Data about CHA',
           DT::dataTableOutput(ns('data_cha'), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE)),
+          width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'Data about CHV',
           DT::dataTableOutput(ns('data_chv'), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE))
+          width = NULL, solidHeader= TRUE, ))
       ),
       fluidRow(
         column(6, box(
           title = 'Household Registration Form Submissions from CHA-supervised CHVs',
           leafletOutput(ns('cha_map_plot'), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE)),
+          width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'Household Registration Form Submissions from CHV',
           leafletOutput(ns('chv_map_plot'), height = 400),
-          width = NULL, status = "primary", solidHeader = TRUE))
+          width = NULL, solidHeader= TRUE, ))
       )
     )
   )
