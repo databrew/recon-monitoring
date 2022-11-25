@@ -16,15 +16,18 @@ mod_progress_ui <- function(id){
       fluidRow(
         column(3, pickerInput(ns("ward"), "Select Ward:", "",
                               multiple = TRUE,
-                              options = list(`actions-box` = TRUE)),
+                              options = list(`actions-box` = TRUE,
+                                             `live-search` = TRUE)),
                style="z-index:1002;"),
         column(3, pickerInput(ns("community_health_unit"), "Select CHU:", "",
                               multiple = TRUE,
-                              options = list(`actions-box` = TRUE)),
+                              options = list(`actions-box` = TRUE,
+                                             `live-search` = TRUE)),
                style="z-index:1002;"),
         column(3, pickerInput(ns("village"), "Select Village:", "",
                               multiple = TRUE,
-                              options = list(`actions-box` = TRUE)),
+                              options = list(`actions-box` = TRUE,
+                                             `live-search` = TRUE)),
                style="z-index:1002;"),
         column(1, actionBttn(ns("submit"),
                              "Submit Selection",
@@ -66,7 +69,7 @@ mod_progress_server <- function(input, output, session){
   filename <- tempfile(fileext = '.csv')
   data <-  get_s3_data(s3obj = paws::s3(),
                        bucket = 'databrew.org',
-                       object_key = "kwale/raw-form/reconbhouseholdtraining/reconbhouseholdtraining.csv",
+                       object_key = "kwale/clean-form/reconbhouseholdtraining/reconbhouseholdtraining.csv",
                        filename = filename) %>%
     read.csv(.) %>%
     tibble::as_tibble(.name_repair = "unique") %>%
@@ -229,7 +232,7 @@ mod_progress_server <- function(input, output, session){
                                   ord = row_number(),
                                   day_of_week = fct_reorder(day_of_week, ord)) %>%
                     ggplot(aes(x = day_of_week, y = n)) +
-                    geom_bar(stat = 'identity', fill = 'dodgerblue4') +
+                    geom_bar(stat = 'identity', fill = 'dodgerblue4', alpha = 0.6) +
                     scale_y_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
                     theme_minimal() +
                     labs(x = "", y = "") +
@@ -249,7 +252,7 @@ mod_progress_server <- function(input, output, session){
       dplyr::summarise(n = n())
     p <- ggplotly(summary %>%
                     ggplot2::ggplot(aes_string(x = input$filter_group, y = "n")) +
-                    geom_bar(stat = 'identity', fill = 'dodgerblue4') +
+                    geom_bar(stat = 'identity', fill = 'dodgerblue4', alpha = 0.6) +
                     scale_y_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
                     theme_minimal() +
                     labs(x = "", y = "") +

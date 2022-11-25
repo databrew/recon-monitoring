@@ -34,7 +34,7 @@ app_ui <- function() {
       ),
       menuItem(
         id = "vizualizationIDbar",
-        text = 'Visualizations',
+        text = 'Dashboards',
         tabName = 'recon_vis',
         startExpanded = TRUE,
         menuSubItem(
@@ -61,10 +61,6 @@ app_ui <- function() {
       menuItem(
         text = 'Documentation',
         tabName = 'docu'
-      ),
-      menuItem(
-        text = 'Download full data',
-        href = 'https://datacatalog.worldbank.org/dataset/hefpi'
       )
     )
   )
@@ -74,24 +70,56 @@ app_ui <- function() {
     golem_add_external_resources(),
     tabItems(
       tabItem(tabName = "about",
-              h1("Welcome to the Recon Monitoring RShiny App!"),
+              h1("Recon Monitoring Dashboard"),
+              div("Property of DataBrew LLC."),
+              div("@Author: atediarjo@gmail.com"),
+              div("@Reviewed by : joe@brew.cc, xing@brew.cc"),
               br(),
-              h2("Guidelines:"),
+              h2("About"),
+              div("This dashboard contains all the components to monitor Kwale survey collection process."),
+              div("Which covers data related to progress, internet connectivity, fieldworkers, and identified anomalies"),
               br(),
-              h2("References:")
+              h2("References"),
+              div("GitHub Repository: https://github.com/databrew/recon-monitoring")
       ),
       tabItem(
         tabName="progress",
         fluidPage(
           fluidRow(
-            h2("Kwale Monitoring Dashboard"),
+            h2("Progress"),
             br()
           ),
           fluidRow(
-            mod_progress_ui("progress")
+            mod_progress_ui("household")
+          )
+        )
+      ),
+      tabItem(
+        tabName="internet_coverage",
+        fluidPage(
+          fluidRow(
+            h2("Internet Coverage"),
+            br()
+          ),
+          fluidRow(
+            mod_internet_coverage_ui("household")
+          )
+        )
+      ),
+      tabItem(
+        tabName="fieldworker_performance",
+        fluidPage(
+          fluidRow(
+            h2("Fieldworker Performance"),
+            br()
+          ),
+          fluidRow(
+            mod_fieldworker_performance_ui("registration")
           )
         )
       )
+
+
     )
   )
 
