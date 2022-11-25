@@ -74,9 +74,8 @@ mod_internet_coverage_server <- function(input, output, session){
         values$orig_data %>%
           ggplot(aes(x = ward, y = lag, fill = ward)) +
           geom_boxplot(alpha = 0.8, colour = "grey50") +
-          geom_jitter(width = 0.05) +
           theme_minimal() +
-          scale_fill_brewer(palette="RdBu") +
+          scale_fill_brewer(palette="Accent") +
           labs(x = "", y = "lag (seconds)") +
           theme(legend.position = "none") +
           theme(axis.text.x = element_text(angle=45, hjust=1))
@@ -123,7 +122,6 @@ mod_internet_coverage_server <- function(input, output, session){
           ycol="Latitude",
           zcol = "lag",
           crs = 4269,
-          col.regions = rev(brewer.pal(9, "RdBu")),
           grid = FALSE)
 
         map_plot <- mapv + mapview(NULL,

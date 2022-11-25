@@ -232,11 +232,13 @@ mod_progress_server <- function(input, output, session){
                                   ord = row_number(),
                                   day_of_week = fct_reorder(day_of_week, ord)) %>%
                     ggplot(aes(x = day_of_week, y = n)) +
-                    geom_bar(stat = 'identity', fill = 'dodgerblue4', alpha = 0.6) +
+                    geom_bar(stat = 'identity', alpha = 0.9, fill = 'dodgerblue4') +
                     scale_y_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
                     theme_minimal() +
                     labs(x = "", y = "") +
-                    theme(axis.text.x = element_text(angle=45, hjust=1)))
+                    theme(axis.text.x = element_text(angle=45, hjust=1),
+                          legend.position = "none")
+                    )
     p
   })
 
@@ -251,12 +253,17 @@ mod_progress_server <- function(input, output, session){
       dplyr::group_by(!!sym(input$filter_group)) %>%
       dplyr::summarise(n = n())
     p <- ggplotly(summary %>%
-                    ggplot2::ggplot(aes_string(x = input$filter_group, y = "n")) +
-                    geom_bar(stat = 'identity', fill = 'dodgerblue4', alpha = 0.6) +
+                    ggplot2::ggplot(aes_string(x = input$filter_group,
+                                               y = "n",
+                                               fill = input$filter_group)) +
+                    geom_bar(stat = 'identity', alpha = 0.9) +
                     scale_y_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
                     theme_minimal() +
                     labs(x = "", y = "") +
-                    theme(axis.text.x = element_text(angle=45, hjust=1)))
+                    theme(axis.text.x = element_text(angle=45, hjust=1),
+                          legend.position = "none") +
+                    scale_fill_brewer(palette="Accent")
+                    )
     p
   })
 
