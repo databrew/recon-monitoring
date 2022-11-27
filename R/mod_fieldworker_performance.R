@@ -12,47 +12,48 @@ mod_fieldworker_performance_ui <- function(id){
   tagList(
     fluidPage(
       fluidRow(
-        column(3, pickerInput(ns("cha_wid"), "Select CHA by ID:", "",
-                              multiple = TRUE,
-                              options = list(`actions-box` = TRUE,
-                                             `live-search` = TRUE)),
-               style="z-index:1002;"),
-        column(3, pickerInput(ns("chv_wid"), "Select CHV by ID:", "",
-                              multiple = TRUE,
-                              options = list(`actions-box` = TRUE,
-                                             `live-search` = TRUE)),
-               style="z-index:1002;")
+        column(3, pickerInput(
+          ns("cha_wid"), "Select CHA ID:", "",
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE,
+          `live-search` = TRUE)),
+          style="z-index:1002;"),
+        column(3, pickerInput(
+          ns("chv_wid"), "Select CHV ID:", "",
+          multiple = TRUE,
+          options = list(`actions-box` = TRUE,
+                         `live-search` = TRUE)),
+          style="z-index:1002;")
       ),
 
       fluidRow(
-        column(3, actionBttn(ns("submit"),
-                             "Submit Selection",
-                             color = "primary",
-                             style = 'simple'))
+        column(3, actionBttn(
+          ns("submit"),
+          "Submit Selection",
+          color = "primary",
+          style = 'simple'))
       ),
-
       br(),
-
       fluidRow(
         column(6, box(
-          title = 'Data about CHA',
-          DT::dataTableOutput(ns('data_cha'), height = 400),
+          title = 'CHA Table',
+          DT::dataTableOutput(ns('cha_table'), height = 400),
           width = NULL, solidHeader= TRUE, )),
         column(6, box(
-          title = 'Data about CHV',
-          DT::dataTableOutput(ns('data_chv'), height = 400),
+          title = 'CHV Table',
+          DT::dataTableOutput(ns('chv_table'), height = 400),
           width = NULL, solidHeader= TRUE, ))
+        )
       ),
       fluidRow(
         column(6, box(
           title = 'Household Registration Form Submissions from CHA-supervised CHVs',
           leafletOutput(ns('cha_map_plot'), height = 400),
-          width = NULL, solidHeader= TRUE, )),
+          width = NULL, solidHeader= TRUE)),
         column(6, box(
           title = 'Household Registration Form Submissions from CHV',
           leafletOutput(ns('chv_map_plot'), height = 400),
-          width = NULL, solidHeader= TRUE, ))
-      )
+          width = NULL, solidHeader= TRUE))
     )
   )
 }
@@ -64,47 +65,64 @@ mod_fieldworker_performance_server <- function(input, output, session){
   ns <- session$ns
 
   filename <- tempfile(fileext = '.csv')
-  data <-  get_s3_data(
+  registration <-  get_s3_data(
     s3obj = paws::s3(),
     bucket = 'databrew.org',
     object_key = "kwale/clean-form/reconaregistrationtraining/reconaregistrationtraining.csv",
     filename = filename) %>%
-    read.csv(.) %>%
+    read.csv(., row.names = 1) %>%
     tibble::as_tibble(.name_repair = "unique") %>%
-    dplyr::mutate(wid = as.character(wid))
+    dplyr::mutate(wid = as.character(wid),
+                  wid_cha = as.character(
+                    ifelse(is.na(cha_wid_qr),
+                    cha_wid_manual,
+                    cha_wid_qr)),
+                  Latitude = as.numeric(Latitude),
+                  Longitude = as.numeric(Longitude))
 
-
-  cha_data <- data %>%
+  cha_data <- registration %>%
     dplyr::filter(worker_type == 'CHA') %>%
-    dplyr::select(
-      wid,
-      w_first_name,
-      w_last_name,
-      sub_county_cha,
-      ward_cha,
-      community_health_unit_cha,
-      number_chv_supervise,
-      num_households,
-      internet_conn_cha,
-      Latitude,
-      Longitude)
+    dplyr::select(wid,
+                  w_first_name,
+                  w_last_name,
+                  community_health_unit = community_health_unit_chv,
+                  username,
+                  Longitude,
+                  Latitude,
+                  villages = villages_cha,
+                  subcounty = sub_county_cha,
+                  ward = ward_cha,
+                  num_households,
+                  internet_conn_cha,
+                  number_chv_supervise)
 
-  chv_data <- data %>%
+  chv_data <- registration %>%
     dplyr::filter(worker_type == 'CHV') %>%
-    mutate(wid_cha = ifelse(is.na(cha_wid_qr), cha_wid_manual, cha_wid_qr)) %>%
-    dplyr::select(
-      wid,
-      wid_cha,
-      w_first_name,
-      w_last_name,
-      sub_county_chv,
-      ward_chv,
-      community_health_unit_chv,
-      villages_chv,
-      num_households,
-      internet_conn_chv,
-      Latitude,
-      Longitude)
+    dplyr::select(wid,
+                  wid_cha,
+                  w_first_name,
+                  w_last_name,
+                  community_health_unit = community_health_unit_chv,
+                  username,
+                  Longitude,
+                  Latitude,
+                  villages = villages_chv,
+                  subcounty = sub_county_chv,
+                  ward = ward_chv,
+                  num_households,
+                  internet_conn_chv)
+
+  hh <- get_s3_data(
+    s3obj = paws::s3(),
+    bucket = 'databrew.org',
+    object_key = "kwale/clean-form/reconbhouseholdtraining/reconbhouseholdtraining.csv",
+    filename = filename) %>%
+    read.csv(., row.names = 1) %>%
+    tibble::as_tibble(.name_repair = "unique") %>%
+    tidyr::drop_na(wid_qr) %>%
+    dplyr::mutate(Latitude = as.numeric(Latitude),
+                  Longitude = as.numeric(Longitude))
+
 
   cha_list <- cha_data %>%
     .$wid %>%
@@ -116,11 +134,13 @@ mod_fieldworker_performance_server <- function(input, output, session){
 
   values <- reactiveValues(
     orig_cha_data = cha_data,
-    orig_chv_data = chv_data,
-    cha_list = cha_list,
-    chv_list = chv_list,
     filter_cha_data = cha_data,
+    orig_chv_data = chv_data,
     filter_chv_data = chv_data,
+    orig_hh_data = hh,
+    filter_hh_data = hh,
+    cha_list = cha_list,
+    chv_list = chv_list
   )
 
   observe({
@@ -133,21 +153,27 @@ mod_fieldworker_performance_server <- function(input, output, session){
   })
 
   observeEvent(input$submit, {
+    # values$filter_cha_data <- values$orig_cha_data %>%
+    #   dplyr::filter(wid %in% input$cha_wid)
     values$filter_cha_data <- values$orig_cha_data %>%
-      dplyr::filter(wid %in% input$cha_wid)
+      dplyr::filter(wid %in% input$wid)
 
     values$filter_chv_data <- values$orig_chv_data %>%
-      dplyr::filter(wid %in% input$chv_wid)
+      dplyr::filter(wid %in% input$wid)
+
   }, ignoreNULL=FALSE)
 
 
-  output$data_cha = DT::renderDataTable({
+  output$cha_table = DT::renderDataTable({
     if(input$submit == 0){
       data <- values$orig_cha_data
     }else{
       data <- values$filter_cha_data
     }
 
+    data <- data %>%
+      dplyr::select(-Latitude, -Longitude)
+
     DT::datatable(data,
                   extensions = 'Buttons',
                   options = list(
@@ -161,18 +187,22 @@ mod_fieldworker_performance_server <- function(input, output, session){
                              modifier = list(page = "all")
                            )
                       )
-                    ),
-                    fixedColumns = list(leftColumns = 2)
+                    )
                   )
     )
   })
 
-  output$data_chv = DT::renderDataTable({
+
+  output$chv_table = DT::renderDataTable({
     if(input$submit == 0){
       data <- values$orig_chv_data
     }else{
       data <- values$filter_chv_data
     }
+
+    data <- data %>%
+      dplyr::select(-Latitude, -Longitude)
+
     DT::datatable(data,
                   extensions = 'Buttons',
                   options = list(
@@ -186,77 +216,66 @@ mod_fieldworker_performance_server <- function(input, output, session){
                              modifier = list(page = "all")
                            )
                       )
-                    ),
-                    fixedColumns = list(leftColumns = 2)
+                    )
                   )
-                )
+    )
   })
-
 
   output$cha_map_plot <- renderLeaflet({
-    if(input$submit == 0){
-      data <- values$orig_chv_data
-    }else{
-      data <- values$orig_chv_data %>%
-        dplyr::filter(wid_cha %in% input$cha_wid)
-    }
 
-    data <- data %>%
+    data <- values$orig_hh_data %>%
+        dplyr::filter(wid_qr %in% values$cha_list)
+
+
+    content_placeholder <- paste0("Household ID: {hh_id}<br/>",
+                                  "Ward: {ward}<br/>",
+                                  "Village: {village}<br/>",
+                                  "Worker ID: {wid_qr}")
+
+    data <- data  %>%
       as_tibble(.name_repair = "universal") %>%
-      dplyr::filter(!is.na(Latitude), !is.na(Longitude))
+      dplyr::filter(!is.na(Latitude), !is.na(Longitude)) %>%
+      dplyr::mutate(content = glue::glue(content_placeholder))
 
-    if(nrow(data) > 0){
-      mapv <- mapview(
-        data,
-        xcol = "Longitude",
-        ycol="Latitude",
-        crs = 4269,
-        grid = FALSE)
 
-      map_plot <- mapv + mapview(NULL,
-                                 crs = 4269,
-                                 grid = FALSE)
-
-      map_plot@map
-
-    }else{
-      mapview(NULL,
-              crs = 4269,
-              grid = FALSE)
-    }
+    leaflet(data) %>%
+      addProviderTiles("CartoDB.Positron") %>%
+      addCircleMarkers(
+        lng=~Longitude,
+        stroke = FALSE,
+        fillOpacity = 0.4,
+        radius = 7,
+        lat=~Latitude,
+        popup=~content)
   })
 
+
   output$chv_map_plot <- renderLeaflet({
-    if(input$submit == 0){
-      data <- values$orig_chv_data
-    }else{
-      data <- values$orig_chv_data %>%
-        dplyr::filter(wid %in% input$chv_wid)
-    }
 
-    data <- data %>%
+    data <- values$orig_hh_data %>%
+      dplyr::filter(wid_qr %in% values$chv_list)
+
+    content_placeholder <- paste0("Household ID: {hh_id}<br/>",
+                                  "Ward: {ward}<br/>",
+                                  "Village: {village}<br/>",
+                                  "Worker ID: {wid_qr}")
+    data <- data  %>%
       as_tibble(.name_repair = "universal") %>%
-      dplyr::filter(!is.na(Latitude), !is.na(Longitude))
+      dplyr::filter(!is.na(Latitude), !is.na(Longitude)) %>%
+      dplyr::mutate(content = glue::glue(content_placeholder))
 
-    if(nrow(data) > 0){
-      mapv <- mapview(
-        data,
-        xcol = "Longitude",
-        ycol="Latitude",
-        crs = 4269,
-        grid = FALSE)
 
-      map_plot <- mapv + mapview(NULL,
-                                 crs = 4269,
-                                 grid = FALSE)
 
-      map_plot@map
 
-    }else{
-      mapview(NULL,
-              crs = 4269,
-              grid = FALSE)
-    }
+    leaflet(data) %>%
+      addProviderTiles("CartoDB.Positron") %>%
+      addCircleMarkers(
+        lng=~Longitude,
+        stroke = FALSE,
+        fillOpacity = 0.4,
+        radius = 7,
+        lat=~Latitude,
+        popup=~content)
   })
 
 }

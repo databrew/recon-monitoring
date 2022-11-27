@@ -150,10 +150,13 @@ mod_progress_server <- function(input, output, session){
     data <- values$filter_data %>%
       dplyr::filter(!is.na(Longitude))
 
-    label <- glue::glue(
-    "<strong>Ward</strong>: {data$ward}</br>
-    <strong>CHU</strong>: {data$community_health_unit}</br>
-    <strong>Village</strong>: {data$village}") %>% lapply(htmltools::HTML)
+    content <- paste0(
+    "
+    <strong>Household ID</strong>: {hh_id}</br>
+    <strong>Ward</strong>: {ward}</br>
+    <strong>CHU</strong>: {community_health_unit}</br>
+    <strong>Village</strong>: {village}
+    ")
 
     if(input$submit == 0){
       data <- values$orig_data
@@ -164,28 +167,17 @@ mod_progress_server <- function(input, output, session){
     data <- data %>%
       as_tibble(.name_repair = "universal") %>%
       dplyr::filter(!is.na(Latitude)) %>%
-      dplyr::select(ward, Latitude, Longitude ,community_health_unit, village)
+      dplyr::mutate(content = glue::glue(content))
 
-    if(nrow(data) > 0){
-      mapv <- mapview(
-        data,
-        xcol = "Longitude",
-        ycol="Latitude",
-        crs = 4269,
-        grid = FALSE,
-        label = label)
-
-      map_plot <- mapv + mapview(NULL,
-                                 crs = 4269,
-                                 grid = FALSE)
-
-      map_plot@map
-
-    }else{
-      mapview(NULL,
-              crs = 4269,
-              grid = FALSE)
-    }
+    leaflet(data) %>%
+      addProviderTiles("CartoDB.Positron") %>%
+      addCircleMarkers(
+        lng=~Longitude,
+        stroke = FALSE,
+        fillOpacity = 0.4,
+        radius = 7,
+        lat=~Latitude,
+        popup=~content)
   })
 
   output$cumulative_submission <- renderPlotly({

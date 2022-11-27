@@ -110,29 +110,27 @@ mod_internet_coverage_server <- function(input, output, session){
 
 
     output$lag_map_plot <- renderLeaflet({
+      content_placeholder <- paste0("Household ID: {hh_id}<br/>",
+                                    "Lag: {lag} secs")
       data <- values$orig_data %>%
         as_tibble(.name_repair = "universal") %>%
         dplyr::filter(!is.na(Latitude)) %>%
-        dplyr::select(ward, Latitude, Longitude, lag)
+        dplyr::mutate(Latitude = as.numeric(Latitude),
+                      Longitude = as.numeric(Longitude),
+                      content = glue::glue(content_placeholder))
 
-      if(nrow(data) > 0){
-        mapv <- mapview(
-          data,
-          xcol = "Longitude",
-          ycol="Latitude",
-          zcol = "lag",
-          crs = 4269,
-          grid = FALSE)
+      pal <- colorNumeric(palette = "RdBu", domain = c(0:max(data$lag)), reverse = TRUE)
 
-        map_plot <- mapv + mapview(NULL,
-                                   crs = 4269,
-                                   grid = FALSE)
-        map_plot@map
-      }else{
-        mapview(NULL,
-                crs = 4269,
-                grid = FALSE)
-      }
+      leaflet(data) %>%
+        addProviderTiles("CartoDB.Positron") %>%
+        addCircleMarkers(
+          lng=~Longitude,
+          stroke = FALSE,
+          fillOpacity = 0.4,
+          radius = 7,
+          color = ~pal(lag),
+          lat=~Latitude,
+          popup=~content)
     })
 }
 
