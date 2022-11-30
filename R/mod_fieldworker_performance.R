@@ -31,7 +31,7 @@ mod_fieldworker_performance_ui <- function(id){
           ns("submit"),
           "Submit Selection",
           color = "primary",
-          style = 'simple'))
+          style = 'minimal'))
       ),
       br(),
       fluidRow(
@@ -87,9 +87,6 @@ mod_fieldworker_performance_server <- function(input, output, session){
                   w_last_name,
                   community_health_unit = community_health_unit_chv,
                   username,
-                  Longitude,
-                  Latitude,
-                  villages = villages_cha,
                   subcounty = sub_county_cha,
                   ward = ward_cha,
                   num_households,
@@ -104,13 +101,11 @@ mod_fieldworker_performance_server <- function(input, output, session){
                   w_last_name,
                   community_health_unit = community_health_unit_chv,
                   username,
-                  Longitude,
-                  Latitude,
                   villages = villages_chv,
                   subcounty = sub_county_chv,
                   ward = ward_chv,
-                  num_households,
-                  internet_conn_chv)
+                  num_households)
+
 
   hh <- get_s3_data(
     s3obj = paws::s3(),
@@ -120,8 +115,78 @@ mod_fieldworker_performance_server <- function(input, output, session){
     read.csv(., row.names = 1) %>%
     tibble::as_tibble(.name_repair = "unique") %>%
     tidyr::drop_na(wid_qr) %>%
-    dplyr::mutate(Latitude = as.numeric(Latitude),
-                  Longitude = as.numeric(Longitude))
+    dplyr::mutate(
+      wid = as.character(wid_qr),
+      Latitude = as.numeric(Latitude),
+      Longitude = as.numeric(Longitude)) %>%
+    dplyr::select(
+      wid,
+      hh_id,
+      ward,
+      community_health_unit,
+      village,
+      Longitude,
+      Latitude)
+
+
+
+
+  #############################
+  # table 2: data about CHV
+  #############################
+  # specs:
+  # - name
+  # - subcounty
+  # - ward
+  # - CHU
+  # - villages
+  # - Target number of households
+  # - number of household forms submitted
+  # - number of days with household forms submitted
+  # - name/ID of CHA
+  chv_data <- chv_data %>%
+    dplyr::left_join(hh %>%
+                       dplyr::group_by(wid) %>%
+                       dplyr::summarise(
+                         num_household_form_submitted = n()),
+                     by = "wid") %>%
+    dplyr::mutate(
+      num_household_form_submitted = ifelse(
+        is.na(num_household_form_submitted),
+        0, num_household_form_submitted),
+      household_form_percent_completion = glue::glue(
+        "{value}%",
+        value = sprintf(((
+          num_household_form_submitted / num_households) * 100),
+          fmt = '%#.1f'))
+    )
+
+  #############################
+  # table 1: data about CHA
+  #############################
+  # specs:
+  # - name
+  # - subcounty
+  # - ward
+  # - CHU
+  # - number of CHVs supervised
+  # - names/IDs of CHVs supervised
+  # - number of households overseen
+  # - reported internet connectivity
+  # - number of forms submitted by CHVs supervised
+  cha_data <- cha_data %>%
+    dplyr::left_join(chv_data %>%
+                       dplyr::select(wid_chv = wid,
+                                     wid_cha,
+                                     num_household_form_submitted),
+                     by = c("wid" = "wid_cha")) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(
+      wid_chv = ifelse(is.na(wid_chv), as.character(NA),
+                            paste0(wid_chv, collapse = ";")),
+      total_household_form_submitted = sum(
+        num_household_form_submitted, na.rm = T))
+
 
 
   cha_list <- cha_data %>%
@@ -171,9 +236,6 @@ mod_fieldworker_performance_server <- function(input, output, session){
       data <- values$filter_cha_data
     }
 
-    data <- data %>%
-      dplyr::select(-Latitude, -Longitude)
-
     DT::datatable(data,
                   extensions = 'Buttons',
                   options = list(
@@ -200,8 +262,6 @@ mod_fieldworker_performance_server <- function(input, output, session){
       data <- values$filter_chv_data
     }
 
-    data <- data %>%
-      dplyr::select(-Latitude, -Longitude)
 
     DT::datatable(data,
                   extensions = 'Buttons',
@@ -224,13 +284,13 @@ mod_fieldworker_performance_server <- function(input, output, session){
   output$cha_map_plot <- renderLeaflet({
 
     data <- values$orig_hh_data %>%
-        dplyr::filter(wid_qr %in% values$cha_list)
+        dplyr::filter(wid %in% values$cha_list)
 
 
     content_placeholder <- paste0("Household ID: {hh_id}<br/>",
                                   "Ward: {ward}<br/>",
                                   "Village: {village}<br/>",
-                                  "Worker ID: {wid_qr}")
+                                  "Worker ID: {wid}")
 
     data <- data  %>%
       as_tibble(.name_repair = "universal") %>%
@@ -253,12 +313,12 @@ mod_fieldworker_performance_server <- function(input, output, session){
   output$chv_map_plot <- renderLeaflet({
 
     data <- values$orig_hh_data %>%
-      dplyr::filter(wid_qr %in% values$chv_list)
+      dplyr::filter(wid %in% values$chv_list)
 
     content_placeholder <- paste0("Household ID: {hh_id}<br/>",
                                   "Ward: {ward}<br/>",
                                   "Village: {village}<br/>",
-                                  "Worker ID: {wid_qr}")
+                                  "Worker ID: {wid}")
     data <- data  %>%
       as_tibble(.name_repair = "universal") %>%
       dplyr::filter(!is.na(Latitude), !is.na(Longitude)) %>%

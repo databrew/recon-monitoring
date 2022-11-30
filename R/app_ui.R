@@ -111,10 +111,6 @@ app_ui <- function() {
         tabName="progress",
         fluidPage(
           fluidRow(
-            h2("Progress"),
-            br()
-          ),
-          fluidRow(
             mod_progress_ui("household")
           )
         )
@@ -122,10 +118,6 @@ app_ui <- function() {
       tabItem(
         tabName="anomalies",
         fluidPage(
-          fluidRow(
-            h2("Anomalies"),
-            br()
-          ),
           fluidRow(
             mod_anomalies_ui("anomalies")
           )
@@ -135,10 +127,6 @@ app_ui <- function() {
         tabName="internet_coverage",
         fluidPage(
           fluidRow(
-            h2("Internet Coverage"),
-            br()
-          ),
-          fluidRow(
             mod_internet_coverage_ui("household")
           )
         )
@@ -146,10 +134,6 @@ app_ui <- function() {
       tabItem(
         tabName="fieldworker_performance",
         fluidPage(
-          fluidRow(
-            h2("Fieldworker Performance"),
-            br()
-          ),
           fluidRow(
             mod_fieldworker_performance_ui("registration")
           )

@@ -14,17 +14,17 @@ mod_progress_ui <- function(id){
   tagList(
     fluidPage(
       fluidRow(
-        column(3, pickerInput(ns("ward"), "Select Ward:", "",
+        column(4, pickerInput(ns("ward"), "Select Ward:", "",
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
                style="z-index:1002;"),
-        column(3, pickerInput(ns("community_health_unit"), "Select CHU:", "",
+        column(4, pickerInput(ns("community_health_unit"), "Select CHU:", "",
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
                style="z-index:1002;"),
-        column(3, pickerInput(ns("village"), "Select Village:", "",
+        column(4, pickerInput(ns("village"), "Select Village:", "",
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
@@ -34,7 +34,14 @@ mod_progress_ui <- function(id){
         column(3, actionBttn(ns("submit"),
                              "Submit Selection",
                              color = "primary",
-                             style = 'simple'))
+                             style = 'minimal'))
+
+      ),
+      br(),
+      fluidRow(
+        infoBoxOutput(ns("total_chv")),
+        infoBoxOutput(ns("total_hh")),
+        infoBoxOutput(ns("percent_hh"))
 
       ),
       br(),
@@ -70,31 +77,69 @@ mod_progress_ui <- function(id){
 # SERVER FOR MOST RECENT VALUE MAP
 mod_progress_server <- function(input, output, session){
   filename <- tempfile(fileext = '.csv')
-  data <-  get_s3_data(s3obj = paws::s3(),
-                       bucket = 'databrew.org',
-                       object_key = "kwale/clean-form/reconbhouseholdtraining/reconbhouseholdtraining.csv",
-                       filename = filename) %>%
-    read.csv(.) %>%
+  hh <-    hh <- get_s3_data(
+    s3obj = paws::s3(),
+    bucket = 'databrew.org',
+    object_key = "kwale/clean-form/reconbhouseholdtraining/reconbhouseholdtraining.csv",
+    filename = filename) %>%
+    read.csv(., row.names = 1) %>%
     tibble::as_tibble(.name_repair = "unique") %>%
-    dplyr::mutate(ward = ifelse(ward == "", "N/A", ward),
-                  community_health_unit = ifelse(community_health_unit == "", "N/A", community_health_unit),
-                  village = ifelse(village == "", "N/A", village))
-  ward_list <- data %>%
+    tidyr::drop_na(wid_qr) %>%
+    dplyr::mutate(
+      wid = as.character(wid_qr),
+      Latitude = as.numeric(Latitude),
+      Longitude = as.numeric(Longitude),
+      ward = ifelse(ward == "", "N/A", ward),
+      community_health_unit = ifelse(community_health_unit == "", "N/A", community_health_unit),
+      village = ifelse(village == "", "N/A", village)) %>%
+    dplyr::select(
+      wid,
+      hh_id,
+      ward,
+      community_health_unit,
+      village,
+      Longitude,
+      Latitude,
+      SubmissionDate)
+
+
+  registration <-  get_s3_data(
+    s3obj = paws::s3(),
+    bucket = 'databrew.org',
+    object_key = "kwale/clean-form/reconaregistrationtraining/reconaregistrationtraining.csv",
+    filename = filename) %>%
+    read.csv(., row.names = 1) %>%
+    tibble::as_tibble(.name_repair = "unique") %>%
+    dplyr::mutate(wid = as.character(wid),
+                  wid_cha = as.character(
+                    ifelse(is.na(cha_wid_qr),
+                           cha_wid_manual,
+                           cha_wid_qr)),
+                  Latitude = as.numeric(Latitude),
+                  Longitude = as.numeric(Longitude))
+
+  chv_target <- registration %>%
+    dplyr::filter(worker_type == 'CHV') %>%
+    dplyr::group_by(wid) %>%
+    dplyr::summarise(num_households = sum(num_households,na.rm=T))
+
+  ward_list <- hh %>%
     .$ward %>%
     unique()
 
-  community_health_unit_list <- data %>%
+  community_health_unit_list <- hh %>%
     .$community_health_unit %>%
     unique()
 
-  village_list <- data %>%
+  village_list <- hh %>%
     .$village %>%
     unique()
 
 
   values <- reactiveValues(
-    orig_data = data,
-    filter_data = data,
+    orig_data = hh,
+    filter_data = hh,
+    chv_target = chv_target,
     ward_list = ward_list,
     community_health_unit_list = community_health_unit_list,
     village_list = village_list
@@ -144,7 +189,87 @@ mod_progress_server <- function(input, output, session){
       dplyr::filter(village %in% input$village)
   }, ignoreNULL=FALSE)
 
+  observe({
+    print(values$filter_data)
+  })
+
+
   # ---- RENDER PLOT FROM REACTIVE DATA ---- #
+  output$total_chv <- renderInfoBox({
+
+    num_chv <- values$chv_target$wid %>%
+      unique() %>%
+      length()
+
+    infoBox(
+      "Total CHV",
+      h2(num_chv),
+      icon = icon("user"),
+      color = 'navy',
+      fill = TRUE
+    )
+  })
+
+  output$total_hh <- renderInfoBox({
+    if(input$submit == 0){
+      data <- values$orig_data
+    }else{
+      data <- values$filter_data
+    }
+
+    total_hh <- data %>%
+      .$hh_id %>%
+      unique() %>%
+      length()
+
+    chv_target <- sum(values$chv_target$num_households)
+
+    infoBox(
+      "Household Forms Submitted",
+      h2(total_hh),
+      icon = icon("house"),
+      color = 'navy',
+      fill = TRUE
+    )
+  })
+
+  output$percent_hh <- renderInfoBox({
+    if(input$submit == 0){
+      data <- values$orig_data
+    }else{
+      data <- values$filter_data
+    }
+
+    total_hh <- data %>%
+      .$hh_id %>%
+      unique() %>%
+      length()
+
+    chv_target <- sum(values$chv_target$num_households)
+
+    perc <- total_hh/chv_target
+
+    perc <- glue::glue(
+      "{value}%",
+      value = sprintf(((perc) * 100),
+        fmt = '%#.1f'))
+
+
+    title <- tags$div(
+      glue::glue("% to Target | "),
+      glue::glue("Goal: {chv_target} Forms"))
+
+
+    infoBox(
+      title,
+      h2(perc),
+      icon = icon("percent"),
+      color = 'navy',
+      fill = TRUE
+    )
+  })
+
+
   output$map_plot <- renderLeaflet({
 
     data <- values$filter_data %>%
