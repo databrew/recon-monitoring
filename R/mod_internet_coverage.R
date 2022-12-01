@@ -42,17 +42,9 @@ mod_internet_coverage_ui <- function(id){
 #' @noRd
 mod_internet_coverage_server <- function(input, output, session){
     ns <- session$ns
-    filename <- tempfile(fileext = '.csv')
-    data <-  get_s3_data(s3obj = paws::s3(),
-                         bucket = 'databrew.org',
-                         object_key = "kwale/clean-form/reconbhouseholdtraining/reconbhouseholdtraining.csv",
-                         filename = filename) %>%
-      read.csv(.) %>%
-      tibble::as_tibble(.name_repair = "unique") %>%
-      dplyr::mutate(ward = ifelse(ward == "", "N/A", ward),
-                    community_health_unit = ifelse(community_health_unit == "", "N/A", community_health_unit),
-                    village = ifelse(village == "", "N/A", village),
-                    lag = as.numeric(ymd_hms(SubmissionDate)- ymd_hms(end_time)))
+
+    data <-  get_household_forms() %>%
+      dplyr::mutate(lag = as.numeric(ymd_hms(SubmissionDate)- ymd_hms(end_time)))
 
     values <- reactiveValues(
       orig_data = data,

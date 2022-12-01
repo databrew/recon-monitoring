@@ -64,21 +64,9 @@ mod_fieldworker_performance_ui <- function(id){
 mod_fieldworker_performance_server <- function(input, output, session){
   ns <- session$ns
 
-  filename <- tempfile(fileext = '.csv')
-  registration <-  get_s3_data(
-    s3obj = paws::s3(),
-    bucket = 'databrew.org',
-    object_key = "kwale/clean-form/reconaregistrationtraining/reconaregistrationtraining.csv",
-    filename = filename) %>%
-    read.csv(., row.names = 1) %>%
-    tibble::as_tibble(.name_repair = "unique") %>%
-    dplyr::mutate(wid = as.character(wid),
-                  wid_cha = as.character(
-                    ifelse(is.na(cha_wid_qr),
-                    cha_wid_manual,
-                    cha_wid_qr)),
-                  Latitude = as.numeric(Latitude),
-                  Longitude = as.numeric(Longitude))
+  registration <-  get_registartion_forms()
+  hh <- get_household_forms() %>%
+    dplyr::select(-end_time)
 
   cha_data <- registration %>%
     dplyr::filter(worker_type == 'CHA') %>%
@@ -107,30 +95,6 @@ mod_fieldworker_performance_server <- function(input, output, session){
                   num_households)
 
 
-  hh <- get_s3_data(
-    s3obj = paws::s3(),
-    bucket = 'databrew.org',
-    object_key = "kwale/clean-form/reconbhouseholdtraining/reconbhouseholdtraining.csv",
-    filename = filename) %>%
-    read.csv(., row.names = 1) %>%
-    tibble::as_tibble(.name_repair = "unique") %>%
-    tidyr::drop_na(wid_qr) %>%
-    dplyr::mutate(
-      wid = as.character(wid_qr),
-      Latitude = as.numeric(Latitude),
-      Longitude = as.numeric(Longitude)) %>%
-    dplyr::select(
-      wid,
-      hh_id,
-      ward,
-      community_health_unit,
-      village,
-      Longitude,
-      Latitude)
-
-
-
-
   #############################
   # table 2: data about CHV
   #############################
@@ -144,7 +108,7 @@ mod_fieldworker_performance_server <- function(input, output, session){
   # - number of household forms submitted
   # - number of days with household forms submitted
   # - name/ID of CHA
-  chv_data <- chv_data %>%
+  chv_data_summarised <- chv_data %>%
     dplyr::left_join(hh %>%
                        dplyr::group_by(wid) %>%
                        dplyr::summarise(
@@ -174,8 +138,8 @@ mod_fieldworker_performance_server <- function(input, output, session){
   # - number of households overseen
   # - reported internet connectivity
   # - number of forms submitted by CHVs supervised
-  cha_data <- cha_data %>%
-    dplyr::left_join(chv_data %>%
+  cha_data_summarised <- cha_data %>%
+    dplyr::left_join(chv_data_summarised %>%
                        dplyr::select(wid_chv = wid,
                                      wid_cha,
                                      num_household_form_submitted),
@@ -187,6 +151,21 @@ mod_fieldworker_performance_server <- function(input, output, session){
       total_household_form_submitted = sum(
         num_household_form_submitted, na.rm = T))
 
+  ##################################
+  # Data for maps
+  ##################################
+  map_data <- hh %>%
+    dplyr::select(wid,
+                  hh_id,
+                  Longitude,
+                  Latitude,
+                  ward,
+                  village,
+                  community_health_unit) %>%
+    dplyr::left_join(chv_data %>%
+                       dplyr::select(wid, wid_cha) %>%
+                       distinct(), by = "wid")
+
 
 
   cha_list <- cha_data %>%
@@ -197,13 +176,14 @@ mod_fieldworker_performance_server <- function(input, output, session){
     .$wid %>%
     unique()
 
+
   values <- reactiveValues(
-    orig_cha_data = cha_data,
-    filter_cha_data = cha_data,
-    orig_chv_data = chv_data,
-    filter_chv_data = chv_data,
-    orig_hh_data = hh,
-    filter_hh_data = hh,
+    orig_cha_data = cha_data_summarised,
+    filter_cha_data = cha_data_summarised,
+    orig_chv_data = chv_data_summarised,
+    filter_chv_data = chv_data_summarised,
+    orig_map_data = map_data,
+    filter_map_data = map_data,
     cha_list = cha_list,
     chv_list = chv_list
   )
@@ -221,10 +201,13 @@ mod_fieldworker_performance_server <- function(input, output, session){
     # values$filter_cha_data <- values$orig_cha_data %>%
     #   dplyr::filter(wid %in% input$cha_wid)
     values$filter_cha_data <- values$orig_cha_data %>%
-      dplyr::filter(wid %in% input$wid)
+      dplyr::filter(wid %in% input$cha_wid)
 
     values$filter_chv_data <- values$orig_chv_data %>%
-      dplyr::filter(wid %in% input$wid)
+      dplyr::filter(wid %in% input$chv_wid)
+
+    values$filter_map_data <- values$orig_map_data %>%
+      dplyr::filter(wid_cha %in% input$cha_wid)
 
   }, ignoreNULL=FALSE)
 
@@ -281,11 +264,13 @@ mod_fieldworker_performance_server <- function(input, output, session){
     )
   })
 
+
   output$cha_map_plot <- renderLeaflet({
-
-    data <- values$orig_hh_data %>%
-        dplyr::filter(wid %in% values$cha_list)
-
+    if(input$submit == 0){
+      data <- values$orig_map_data
+    }else{
+      data <- values$filter_map_data
+    }
 
     content_placeholder <- paste0("Household ID: {hh_id}<br/>",
                                   "Ward: {ward}<br/>",
@@ -311,9 +296,11 @@ mod_fieldworker_performance_server <- function(input, output, session){
 
 
   output$chv_map_plot <- renderLeaflet({
-
-    data <- values$orig_hh_data %>%
-      dplyr::filter(wid %in% values$chv_list)
+    if(input$submit == 0){
+      data <- values$orig_map_data
+    }else{
+      data <- values$filter_map_data
+    }
 
     content_placeholder <- paste0("Household ID: {hh_id}<br/>",
                                   "Ward: {ward}<br/>",

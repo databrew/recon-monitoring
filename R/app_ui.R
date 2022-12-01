@@ -67,6 +67,7 @@ app_ui <- function() {
   body <- dashboardBody(
     use_waiter(),
     waiter_show_on_load(color = "#002244"),
+
     golem_add_external_resources(),
 
     tags$head(tags$style(HTML('

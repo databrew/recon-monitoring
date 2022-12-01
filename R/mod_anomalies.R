@@ -32,13 +32,7 @@ mod_anomalies_ui <- function(id){
 #'
 #' @noRd
 mod_anomalies_server <- function(input, output, session){
-  filename <- tempfile(fileext = '.csv')
-  data <-  get_s3_data(s3obj = paws::s3(),
-                       bucket = 'databrew.org',
-                       object_key = "kwale/anomalies/anomalies.csv",
-                       filename = filename) %>%
-    read.csv(., row.names = 1) %>%
-    tibble::as_tibble(.name_repair = "unique")
+  data <-  get_anomalies_data()
 
   values <- reactiveValues(
     orig_data = data,

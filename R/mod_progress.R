@@ -23,11 +23,6 @@ mod_progress_ui <- function(id){
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
-               style="z-index:1002;"),
-        column(4, pickerInput(ns("village"), "Select Village:", "",
-                              multiple = TRUE,
-                              options = list(`actions-box` = TRUE,
-                                             `live-search` = TRUE)),
                style="z-index:1002;")
       ),
       fluidRow(
@@ -51,7 +46,7 @@ mod_progress_ui <- function(id){
           leafletOutput(ns('map_plot'), height = 400),
           width = NULL, solidHeader= TRUE, )),
         column(6, box(
-          title = 'Cumulative Submissions',
+          title = 'Cumulative Form Submissions by Day',
           plotlyOutput(ns('cumulative_submission'), height = 400),
           width = NULL, solidHeader= TRUE, ))
       ),
@@ -63,7 +58,7 @@ mod_progress_ui <- function(id){
         column(6, box(
           title = 'Submission by Group',
           selectInput(ns("filter_group"), "View by:",
-                      choices = c('ward', 'community_health_unit', 'village'),
+                      choices = c('ward', 'community_health_unit'),
                       selected = 'Ward'),
           plotlyOutput(ns('submission_by_filter'), height = 300),
           width = NULL, solidHeader= TRUE, ))
@@ -75,48 +70,10 @@ mod_progress_ui <- function(id){
 }
 
 # SERVER FOR MOST RECENT VALUE MAP
-mod_progress_server <- function(input, output, session){
-  filename <- tempfile(fileext = '.csv')
-  hh <-    hh <- get_s3_data(
-    s3obj = paws::s3(),
-    bucket = 'databrew.org',
-    object_key = "kwale/clean-form/reconbhouseholdtraining/reconbhouseholdtraining.csv",
-    filename = filename) %>%
-    read.csv(., row.names = 1) %>%
-    tibble::as_tibble(.name_repair = "unique") %>%
-    tidyr::drop_na(wid_qr) %>%
-    dplyr::mutate(
-      wid = as.character(wid_qr),
-      Latitude = as.numeric(Latitude),
-      Longitude = as.numeric(Longitude),
-      ward = ifelse(ward == "", "N/A", ward),
-      community_health_unit = ifelse(community_health_unit == "", "N/A", community_health_unit),
-      village = ifelse(village == "", "N/A", village)) %>%
-    dplyr::select(
-      wid,
-      hh_id,
-      ward,
-      community_health_unit,
-      village,
-      Longitude,
-      Latitude,
-      SubmissionDate)
+mod_progress_server <- function(input, output, session, data){
 
-
-  registration <-  get_s3_data(
-    s3obj = paws::s3(),
-    bucket = 'databrew.org',
-    object_key = "kwale/clean-form/reconaregistrationtraining/reconaregistrationtraining.csv",
-    filename = filename) %>%
-    read.csv(., row.names = 1) %>%
-    tibble::as_tibble(.name_repair = "unique") %>%
-    dplyr::mutate(wid = as.character(wid),
-                  wid_cha = as.character(
-                    ifelse(is.na(cha_wid_qr),
-                           cha_wid_manual,
-                           cha_wid_qr)),
-                  Latitude = as.numeric(Latitude),
-                  Longitude = as.numeric(Longitude))
+  hh <- get_household_forms()
+  registration <- get_registartion_forms()
 
   chv_target <- registration %>%
     dplyr::filter(worker_type == 'CHV') %>%
@@ -131,18 +88,12 @@ mod_progress_server <- function(input, output, session){
     .$community_health_unit %>%
     unique()
 
-  village_list <- hh %>%
-    .$village %>%
-    unique()
-
-
   values <- reactiveValues(
     orig_data = hh,
     filter_data = hh,
     chv_target = chv_target,
     ward_list = ward_list,
-    community_health_unit_list = community_health_unit_list,
-    village_list = village_list
+    community_health_unit_list = community_health_unit_list
   )
 
   observe({
@@ -152,9 +103,6 @@ mod_progress_server <- function(input, output, session){
     updatePickerInput(session, "community_health_unit",
                       choices = sort(community_health_unit_list),
                       selected = community_health_unit_list)
-    updatePickerInput(session, "village",
-                      choices = sort(village_list),
-                      selected = village_list)
   })
 
   observeEvent(input$ward, {
@@ -166,18 +114,6 @@ mod_progress_server <- function(input, output, session){
                       choices = sort(f),
                       selected = f)
   }, ignoreNULL = FALSE)
-
-  observeEvent(input$community_health_unit, {
-    f <- values$orig_data %>%
-      dplyr::filter((ward %in% input$ward) &
-                      (community_health_unit %in% input$community_health_unit)) %>%
-      .$village %>%
-      unique()
-    updatePickerInput(session, "village",
-                      choices = sort(f),
-                      selected = f)
-  }, ignoreNULL = FALSE)
-
   # observeEvent(input$ward_chv, {
   #   values$ward_chv <- input$ward_chv
   # }, ignoreNULL = FALSE)
@@ -185,14 +121,8 @@ mod_progress_server <- function(input, output, session){
   observeEvent(input$submit, {
     values$filter_data <- values$orig_data %>%
       dplyr::filter(ward %in% input$ward) %>%
-      dplyr::filter(community_health_unit %in% input$community_health_unit) %>%
-      dplyr::filter(village %in% input$village)
+      dplyr::filter(community_health_unit %in% input$community_health_unit)
   }, ignoreNULL=FALSE)
-
-  observe({
-    print(values$filter_data)
-  })
-
 
   # ---- RENDER PLOT FROM REACTIVE DATA ---- #
   output$total_chv <- renderInfoBox({
@@ -225,7 +155,7 @@ mod_progress_server <- function(input, output, session){
     chv_target <- sum(values$chv_target$num_households)
 
     infoBox(
-      "Household Forms Submitted",
+      "Household Forms Submitted by CHV",
       h2(total_hh),
       icon = icon("house"),
       color = 'navy',
@@ -256,8 +186,8 @@ mod_progress_server <- function(input, output, session){
 
 
     title <- tags$div(
-      glue::glue("% to Target | "),
-      glue::glue("Goal: {chv_target} Forms"))
+      glue::glue("% to Target "),
+      glue::glue("({chv_target} Households)"))
 
 
     infoBox(
@@ -280,7 +210,6 @@ mod_progress_server <- function(input, output, session){
     <strong>Household ID</strong>: {hh_id}</br>
     <strong>Ward</strong>: {ward}</br>
     <strong>CHU</strong>: {community_health_unit}</br>
-    <strong>Village</strong>: {village}
     ")
 
     if(input$submit == 0){
@@ -321,7 +250,6 @@ mod_progress_server <- function(input, output, session){
                     ggplot2::ggplot(aes(x = day, y = n)) +
                     geom_line(color = 'darkblue') +
                     geom_point() +
-                    scale_y_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
                     theme_minimal() +
                     labs(x = "", y = ""))
     p
@@ -353,7 +281,6 @@ mod_progress_server <- function(input, output, session){
                                   day_of_week = fct_reorder(day_of_week, ord)) %>%
                     ggplot(aes(x = day_of_week, y = n)) +
                     geom_bar(stat = 'identity', alpha = 0.9, fill = 'dodgerblue4') +
-                    scale_y_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
                     theme_minimal() +
                     labs(x = "", y = "") +
                     theme(axis.text.x = element_text(angle=45, hjust=1),
@@ -377,7 +304,6 @@ mod_progress_server <- function(input, output, session){
                                                y = "n",
                                                fill = input$filter_group)) +
                     geom_bar(stat = 'identity', alpha = 0.9) +
-                    scale_y_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
                     theme_minimal() +
                     labs(x = "", y = "") +
                     theme(axis.text.x = element_text(angle=45, hjust=1),
