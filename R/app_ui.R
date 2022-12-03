@@ -17,6 +17,7 @@
 #' @import waiter
 #' @import shinyalert
 #' @import scales
+#' @import reactable
 #' @importFrom shiny NS tagList
 app_ui <- function() {
 
@@ -40,22 +41,22 @@ app_ui <- function() {
         menuSubItem(
           text="Progress",
           tabName="progress",
-          icon = shiny::icon("angle-right")
+          icon = shiny::icon("bars-progress")
         ),
         menuSubItem(
           text="Anomalies",
           tabName="anomalies",
-          icon = shiny::icon("angle-right")
+          icon = shiny::icon("circle-exclamation")
         ),
         menuSubItem(
           text="Internet Coverage",
           tabName="internet_coverage",
-          icon = shiny::icon("angle-right")
+          icon = shiny::icon("wifi")
         ),
         menuSubItem(
           text="Fieldworker Performance",
           tabName="fieldworker_performance",
-          icon = shiny::icon("angle-right")
+          icon = shiny::icon("users")
         )
       ),
       menuItem(
@@ -83,11 +84,10 @@ app_ui <- function() {
 
                                 /* body */
                                 .content-wrapper, .right-side {
-                                background-color: #ffffff;
+                                background-color: #F5F5F5;
                                 }
 
                                 .box-header h3.box-title {
-                                  font-weight: bold;
                                   font-size: 24px;
                                 }
 
@@ -95,18 +95,13 @@ app_ui <- function() {
 
 
     tabItems(
-      tabItem(tabName = "about",
-              h1("Recon Monitoring Dashboard"),
-              div("Property of DataBrew LLC."),
-              div("@Author: atediarjo@gmail.com"),
-              div("@Reviewed by : joe@brew.cc, xing@brew.cc"),
-              br(),
-              h2("About"),
-              div("This dashboard contains all the components to monitor Kwale survey collection process."),
-              div("Which covers data related to progress, internet connectivity, fieldworkers, and identified anomalies"),
-              br(),
-              h2("References"),
-              div("GitHub Repository: https://github.com/databrew/recon-monitoring")
+      tabItem(
+        tabName = "about",
+        fluidPage(
+          fluidRow(
+            mod_landing_page_ui("landing")
+          )
+        )
       ),
       tabItem(
         tabName="progress",

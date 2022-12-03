@@ -43,17 +43,17 @@ mod_internet_coverage_ui <- function(id){
 mod_internet_coverage_server <- function(input, output, session){
     ns <- session$ns
 
-    data <-  get_household_forms() %>%
+    lag_data <-  get_household_forms() %>%
       dplyr::mutate(lag = as.numeric(ymd_hms(SubmissionDate)- ymd_hms(end_time)))
 
     values <- reactiveValues(
-      orig_data = data,
+      orig_data = lag_data,
     )
 
     output$time_lag_dist <- renderPlotly({
+      data <- values$orig_data
       ggplotly(
-        values$orig_data %>%
-          dplyr::mutate() %>%
+        data %>%
           ggplot(aes(lag)) +
           geom_density(adjust = 0.5, fill = 'darkblue', alpha = 0.5) +
           labs(x = "lag (seconds)", y = "") +
@@ -62,8 +62,9 @@ mod_internet_coverage_server <- function(input, output, session){
     })
 
     output$time_lag_dist_by_ward <- renderPlotly({
+      data <- values$orig_data
       ggplotly(
-        values$orig_data %>%
+        data %>%
           ggplot(aes(x = ward, y = lag, fill = ward)) +
           geom_boxplot(alpha = 0.8, colour = "grey50") +
           theme_minimal() +
@@ -75,7 +76,8 @@ mod_internet_coverage_server <- function(input, output, session){
     })
 
     output$time_lag_table = DT::renderDataTable({
-      DT::datatable(values$orig_data %>%
+      data <- values$orig_data
+      DT::datatable(data %>%
                       dplyr::select(hh_id,
                                     SubmissionDate,
                                     end_time,
@@ -102,27 +104,37 @@ mod_internet_coverage_server <- function(input, output, session){
 
 
     output$lag_map_plot <- renderLeaflet({
+      data <- values$orig_data
       content_placeholder <- paste0("Household ID: {hh_id}<br/>",
                                     "Lag: {lag} secs")
-      data <- values$orig_data %>%
+      data <- data %>%
         as_tibble(.name_repair = "universal") %>%
         dplyr::filter(!is.na(Latitude)) %>%
         dplyr::mutate(Latitude = as.numeric(Latitude),
                       Longitude = as.numeric(Longitude),
                       content = glue::glue(content_placeholder))
 
-      pal <- colorNumeric(palette = "RdBu", domain = c(0:max(data$lag)), reverse = TRUE)
+      pal <- colorNumeric(palette = "RdBu",
+                          domain = c(0:max(data$lag)), reverse = TRUE)
 
       leaflet(data) %>%
         addProviderTiles("CartoDB.Positron") %>%
         addCircleMarkers(
           lng=~Longitude,
           stroke = FALSE,
-          fillOpacity = 0.4,
-          radius = 7,
+          fillOpacity = 0.5,
+          radius = 3,
           color = ~pal(lag),
           lat=~Latitude,
-          popup=~content)
+          popup=~content) %>%
+        # add a legend
+        addLegend(
+          pal = pal,
+          values = ~lag,
+          opacity = 0.9,
+          position = "bottomleft",
+          title = "Lag (s):"
+        )
     })
 }
 

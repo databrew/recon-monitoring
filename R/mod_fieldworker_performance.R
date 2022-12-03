@@ -31,30 +31,48 @@ mod_fieldworker_performance_ui <- function(id){
           ns("submit"),
           "Submit Selection",
           color = "primary",
-          style = 'minimal'))
+          style = 'unite'))
       ),
       br(),
       fluidRow(
         column(6, box(
-          title = 'CHA Table',
-          DT::dataTableOutput(ns('cha_table'), height = 400),
-          width = NULL, solidHeader= TRUE, )),
-        column(6, box(
-          title = 'CHV Table',
-          DT::dataTableOutput(ns('chv_table'), height = 400),
-          width = NULL, solidHeader= TRUE, ))
-        )
-      ),
-      fluidRow(
-        column(6, box(
-          title = 'Household Registration Form Submissions from CHA-supervised CHVs',
+          title = 'Submissions Map',
           leafletOutput(ns('cha_map_plot'), height = 400),
           width = NULL, solidHeader= TRUE)),
         column(6, box(
-          title = 'Household Registration Form Submissions from CHV',
-          leafletOutput(ns('chv_map_plot'), height = 400),
-          width = NULL, solidHeader= TRUE))
-    )
+          title = 'Fieldworker Summary Table',
+          tags$button(
+            tagList(icon("download"), "Download"),
+            onclick = sprintf("Reactable.downloadDataCSV('%s', '%s')",
+                              ns('cha_chv_summary_table'),
+                              "summary_performance_cha.csv")
+          ),
+          reactableOutput(ns('cha_chv_summary_table'), height = 375),
+          width = NULL, solidHeader= TRUE, ))
+      ),
+      fluidRow(
+        column(6, box(
+          title = 'CHA Raw Table',
+          tags$button(
+            tagList(icon("download"), "Download"),
+            onclick = sprintf("Datatable.downloadDataCSV('%s', '%s')",
+                              ns('cha_table'),
+                              "cha.csv")
+          ),
+          reactableOutput(ns('cha_table'), height = 400),
+          width = NULL, solidHeader= TRUE, )),
+        column(6, box(
+          title = 'CHV Raw Table',
+          tags$button(
+            tagList(icon("download"), "Download"),
+            onclick = sprintf("Datatable.downloadDataCSV('%s', '%s')",
+                              ns('chv_table'),
+                              "chv.csv")
+          ),
+          reactableOutput(ns('chv_table'), height = 400),
+          width = NULL, solidHeader= TRUE, ))
+        )
+      )
   )
 }
 
@@ -71,8 +89,6 @@ mod_fieldworker_performance_server <- function(input, output, session){
   cha_data <- registration %>%
     dplyr::filter(worker_type == 'CHA') %>%
     dplyr::select(wid,
-                  w_first_name,
-                  w_last_name,
                   community_health_unit = community_health_unit_chv,
                   username,
                   subcounty = sub_county_cha,
@@ -85,14 +101,13 @@ mod_fieldworker_performance_server <- function(input, output, session){
     dplyr::filter(worker_type == 'CHV') %>%
     dplyr::select(wid,
                   wid_cha,
-                  w_first_name,
-                  w_last_name,
                   community_health_unit = community_health_unit_chv,
                   username,
                   villages = villages_chv,
                   subcounty = sub_county_chv,
                   ward = ward_chv,
-                  num_households)
+                  num_households,
+                  internet_conn_chv)
 
 
   #############################
@@ -109,11 +124,12 @@ mod_fieldworker_performance_server <- function(input, output, session){
   # - number of days with household forms submitted
   # - name/ID of CHA
   chv_data_summarised <- chv_data %>%
-    dplyr::left_join(hh %>%
+    dplyr::inner_join(hh %>%
                        dplyr::group_by(wid) %>%
                        dplyr::summarise(
                          num_household_form_submitted = n()),
                      by = "wid") %>%
+    dplyr::distinct(wid, .keep_all = TRUE) %>%
     dplyr::mutate(
       num_household_form_submitted = ifelse(
         is.na(num_household_form_submitted),
@@ -139,17 +155,16 @@ mod_fieldworker_performance_server <- function(input, output, session){
   # - reported internet connectivity
   # - number of forms submitted by CHVs supervised
   cha_data_summarised <- cha_data %>%
-    dplyr::left_join(chv_data_summarised %>%
+    dplyr::select(-num_households) %>%
+    dplyr::inner_join(chv_data_summarised %>%
                        dplyr::select(wid_chv = wid,
                                      wid_cha,
-                                     num_household_form_submitted),
+                                     num_household_form_submitted,
+                                     num_households,
+                                     internet_conn_chv),
                      by = c("wid" = "wid_cha")) %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(
-      wid_chv = ifelse(is.na(wid_chv), as.character(NA),
-                            paste0(wid_chv, collapse = ";")),
-      total_household_form_submitted = sum(
-        num_household_form_submitted, na.rm = T))
+    dplyr::mutate(internet_conn = coalesce(
+      internet_conn_cha, internet_conn_chv))
 
   ##################################
   # Data for maps
@@ -162,7 +177,7 @@ mod_fieldworker_performance_server <- function(input, output, session){
                   ward,
                   village,
                   community_health_unit) %>%
-    dplyr::left_join(chv_data %>%
+    dplyr::inner_join(chv_data %>%
                        dplyr::select(wid, wid_cha) %>%
                        distinct(), by = "wid")
 
@@ -178,6 +193,7 @@ mod_fieldworker_performance_server <- function(input, output, session){
 
 
   values <- reactiveValues(
+    filter_cha_chv_data = cha_data_summarised,
     orig_cha_data = cha_data_summarised,
     filter_cha_data = cha_data_summarised,
     orig_chv_data = chv_data_summarised,
@@ -197,6 +213,16 @@ mod_fieldworker_performance_server <- function(input, output, session){
                       selected = values$chv_list)
   })
 
+  observeEvent(input$cha_wid, {
+    f <- values$orig_chv_data %>%
+      dplyr::filter(wid_cha %in% input$cha_wid) %>%
+      .$wid %>%
+      unique()
+    updatePickerInput(session, "chv_wid",
+                      choices = sort(f),
+                      selected = f)
+  }, ignoreNULL = FALSE)
+
   observeEvent(input$submit, {
     # values$filter_cha_data <- values$orig_cha_data %>%
     #   dplyr::filter(wid %in% input$cha_wid)
@@ -206,62 +232,78 @@ mod_fieldworker_performance_server <- function(input, output, session){
     values$filter_chv_data <- values$orig_chv_data %>%
       dplyr::filter(wid %in% input$chv_wid)
 
+    values$filter_cha_chv_data <- values$orig_cha_data %>%
+      dplyr::filter(wid %in% input$cha_wid) %>%
+      dplyr::filter(wid_chv %in% input$chv_wid)
+
     values$filter_map_data <- values$orig_map_data %>%
-      dplyr::filter(wid_cha %in% input$cha_wid)
+      dplyr::filter(wid_cha %in% input$cha_wid) %>%
+      dplyr::filter(wid %in% input$chv_wid)
 
   }, ignoreNULL=FALSE)
 
 
-  output$cha_table = DT::renderDataTable({
+  output$cha_chv_summary_table = renderReactable({
+    if(input$submit == 0){
+      data <- values$orig_cha_data
+    }else{
+      data <- values$filter_cha_chv_data
+    }
+
+    js_func <- JS("function(values, rows) {
+        let totalSubmitted = 0
+        let totalTarget = 0
+        rows.forEach(function(row) {
+          totalTarget += row['num_households']
+          totalSubmitted += row['num_household_form_submitted']
+        })
+        return totalSubmitted / totalTarget
+      }")
+    reactable(
+      data = data %>%
+        dplyr::select(
+          wid_cha = wid,
+          wid_chv,
+          num_household_form_submitted,
+          num_households) %>%
+        dplyr::mutate(percent_completion =
+                        num_household_form_submitted/num_households),
+      groupBy = c("wid_cha"),
+      columns = list(
+        num_household_form_submitted = colDef(aggregate = "sum"),
+        num_households = colDef(aggregate = "sum"),
+        percent_completion = colDef(aggregate = js_func,
+                                    format = colFormat(percent = TRUE, digits = 1))
+      )
+    )
+  })
+
+  output$cha_table = renderReactable({
     if(input$submit == 0){
       data <- values$orig_cha_data
     }else{
       data <- values$filter_cha_data
     }
-
-    DT::datatable(data,
-                  extensions = 'Buttons',
-                  options = list(
-                    dom = 'Bfrtip',
-                    searching = FALSE,
-                    pageLength = 5,
-                    scrollX=TRUE,
-                    buttons = list(
-                      list(extend = "csv", text = "Download Full Results", filename = "data",
-                           exportOptions = list(
-                             modifier = list(page = "all")
-                           )
-                      )
-                    )
-                  )
-    )
+    reactable(data %>%
+                dplyr::select(
+                  wid,
+                  subcounty,
+                  ward,
+                  community_health_unit,
+                  internet_conn_cha,
+                  number_chv_supervise
+                ) %>%
+                distinct(wid,.keep_all = TRUE))
   })
 
 
-  output$chv_table = DT::renderDataTable({
+  output$chv_table = renderReactable({
     if(input$submit == 0){
       data <- values$orig_chv_data
     }else{
       data <- values$filter_chv_data
     }
-
-
-    DT::datatable(data,
-                  extensions = 'Buttons',
-                  options = list(
-                    dom = 'Bfrtip',
-                    searching = FALSE,
-                    pageLength = 5,
-                    scrollX=TRUE,
-                    buttons = list(
-                      list(extend = "csv", text = "Download Full Results", filename = "data",
-                           exportOptions = list(
-                             modifier = list(page = "all")
-                           )
-                      )
-                    )
-                  )
-    )
+    reactable(data)
   })
 
 
@@ -275,7 +317,8 @@ mod_fieldworker_performance_server <- function(input, output, session){
     content_placeholder <- paste0("Household ID: {hh_id}<br/>",
                                   "Ward: {ward}<br/>",
                                   "Village: {village}<br/>",
-                                  "Worker ID: {wid}")
+                                  "CHA ID: {wid_cha}<br/>",
+                                  "CHV ID: {wid}")
 
     data <- data  %>%
       as_tibble(.name_repair = "universal") %>%
@@ -288,8 +331,9 @@ mod_fieldworker_performance_server <- function(input, output, session){
       addCircleMarkers(
         lng=~Longitude,
         stroke = FALSE,
-        fillOpacity = 0.4,
-        radius = 7,
+        color = 'darkblue',
+        fillOpacity = 0.5,
+        radius = 3,
         lat=~Latitude,
         popup=~content)
   })
@@ -304,8 +348,7 @@ mod_fieldworker_performance_server <- function(input, output, session){
 
     content_placeholder <- paste0("Household ID: {hh_id}<br/>",
                                   "Ward: {ward}<br/>",
-                                  "Village: {village}<br/>",
-                                  "Worker ID: {wid}")
+                                  "CHV ID: {wid}")
     data <- data  %>%
       as_tibble(.name_repair = "universal") %>%
       dplyr::filter(!is.na(Latitude), !is.na(Longitude)) %>%
@@ -319,8 +362,9 @@ mod_fieldworker_performance_server <- function(input, output, session){
       addCircleMarkers(
         lng=~Longitude,
         stroke = FALSE,
-        fillOpacity = 0.4,
-        radius = 7,
+        color = 'darkblue',
+        fillOpacity = 0.9,
+        radius = 3,
         lat=~Latitude,
         popup=~content)
   })

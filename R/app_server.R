@@ -13,6 +13,7 @@
 #' @import data.table
 #' @noRd
 app_server <- function(input, output, session) {
+  callModule(mod_landing_page_server, 'landing')
   callModule(mod_progress_server, 'household')
   callModule(mod_anomalies_server, 'anomalies')
   callModule(mod_internet_coverage_server, 'household')

@@ -14,22 +14,22 @@ mod_progress_ui <- function(id){
   tagList(
     fluidPage(
       fluidRow(
-        column(4, pickerInput(ns("ward"), "Select Ward:", "",
+        column(6, pickerInput(ns("ward"), "Select Ward:", "",
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
                style="z-index:1002;"),
-        column(4, pickerInput(ns("community_health_unit"), "Select CHU:", "",
+        column(6, pickerInput(ns("community_health_unit"), "Select CHU:", "",
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
-               style="z-index:1002;")
+               style="z-index:1002;"),
       ),
       fluidRow(
         column(3, actionBttn(ns("submit"),
                              "Submit Selection",
                              color = "primary",
-                             style = 'minimal'))
+                             style = 'unite'))
 
       ),
       br(),
@@ -42,7 +42,7 @@ mod_progress_ui <- function(id){
       br(),
       fluidRow(
         column(6, box(
-          title = 'Map of Submissions',
+          title = 'Map of Household Submissions',
           leafletOutput(ns('map_plot'), height = 400),
           width = NULL, solidHeader= TRUE, )),
         column(6, box(
@@ -114,9 +114,6 @@ mod_progress_server <- function(input, output, session, data){
                       choices = sort(f),
                       selected = f)
   }, ignoreNULL = FALSE)
-  # observeEvent(input$ward_chv, {
-  #   values$ward_chv <- input$ward_chv
-  # }, ignoreNULL = FALSE)
 
   observeEvent(input$submit, {
     values$filter_data <- values$orig_data %>%
@@ -133,10 +130,10 @@ mod_progress_server <- function(input, output, session, data){
 
     infoBox(
       "Total CHV",
-      h2(num_chv),
+      h3(num_chv),
       icon = icon("user"),
       color = 'navy',
-      fill = TRUE
+      width = 6
     )
   })
 
@@ -156,10 +153,10 @@ mod_progress_server <- function(input, output, session, data){
 
     infoBox(
       "Household Forms Submitted by CHV",
-      h2(total_hh),
+      h3(total_hh),
       icon = icon("house"),
       color = 'navy',
-      fill = TRUE
+      width = 6
     )
   })
 
@@ -180,22 +177,21 @@ mod_progress_server <- function(input, output, session, data){
     perc <- total_hh/chv_target
 
     perc <- glue::glue(
-      "{value}%",
+      "{value}% ({total_hh}/{chv_target})",
       value = sprintf(((perc) * 100),
         fmt = '%#.1f'))
 
 
     title <- tags$div(
-      glue::glue("% to Target "),
-      glue::glue("({chv_target} Households)"))
+      glue::glue("% to Household Recon Target"))
 
 
     infoBox(
       title,
-      h2(perc),
+      h3(perc),
       icon = icon("percent"),
       color = 'navy',
-      fill = TRUE
+      width = 6
     )
   })
 
@@ -227,9 +223,10 @@ mod_progress_server <- function(input, output, session, data){
       addProviderTiles("CartoDB.Positron") %>%
       addCircleMarkers(
         lng=~Longitude,
+        color = "darkblue",
         stroke = FALSE,
-        fillOpacity = 0.4,
-        radius = 7,
+        fillOpacity = 0.5,
+        radius = 3,
         lat=~Latitude,
         popup=~content)
   })
@@ -251,6 +248,8 @@ mod_progress_server <- function(input, output, session, data){
                     geom_line(color = 'darkblue') +
                     geom_point() +
                     theme_minimal() +
+                    theme(panel.grid.major.x = element_blank() ,
+                          legend.position = "none") +
                     labs(x = "", y = ""))
     p
   })
@@ -263,7 +262,9 @@ mod_progress_server <- function(input, output, session, data){
       data <- values$filter_data
     }
     summary <- data %>%
-      dplyr::group_by(day_of_week = lubridate::wday(SubmissionDate, label = TRUE, abbr = FALSE)) %>%
+      dplyr::group_by(day_of_week = lubridate::wday(
+        SubmissionDate,
+        label = TRUE, abbr = FALSE)) %>%
       dplyr::group_by(day_of_week) %>%
       dplyr::summarise(n = n())
 
@@ -284,6 +285,7 @@ mod_progress_server <- function(input, output, session, data){
                     theme_minimal() +
                     labs(x = "", y = "") +
                     theme(axis.text.x = element_text(angle=45, hjust=1),
+                          panel.grid.major.x = element_blank() ,
                           legend.position = "none")
                     )
     p
@@ -307,6 +309,7 @@ mod_progress_server <- function(input, output, session, data){
                     theme_minimal() +
                     labs(x = "", y = "") +
                     theme(axis.text.x = element_text(angle=45, hjust=1),
+                          panel.grid.major.x = element_blank(),
                           legend.position = "none") +
                     scale_fill_brewer(palette="Dark2")
                     )

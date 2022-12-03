@@ -48,7 +48,6 @@ mod_anomalies_server <- function(input, output, session){
           geom_col(alpha = 0.9) +
           theme_minimal() +
           labs(y = "", x = "") +
-          scale_x_continuous(breaks=seq(from = 0 , to = round(max(summary$n)), by = 1)) +
           theme(legend.position = "none") +
           scale_fill_brewer(palette="Dark2")
     )
