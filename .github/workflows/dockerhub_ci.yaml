@@ -18,5 +18,5 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: ../../deploy
-        run: ls -la
+      - name: Build Docker Base
+        run: ls ../../
