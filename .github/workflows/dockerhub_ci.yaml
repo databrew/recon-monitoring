@@ -19,12 +19,4 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build Docker Base
-        run: |
-          cd deploy
-          docker build -f Dockerfile_base --progress=plain -t reconmonitoring_base .
-      - name: Build Deployment Docker from Base
-        run: |
-          cd deploy
-          docker build -f Dockerfile --progress=plain -t databrewllc/reconmonitoring:latest .
-      - name: Docker push to Dockerhub
-        run: docker push databrewllc/reconmonitoring::latest
+        run: ls -la
