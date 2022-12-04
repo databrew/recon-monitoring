@@ -8,7 +8,11 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./deploy
     steps:
+      ## use docker
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -18,9 +22,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      ## checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v3
       - name: Build Docker Base
-        run: |
-          cd deploy
-          ls -la
+        run: docker build -f Dockerfile_base --progress=plain -t reconmonitoring_base .
+      - name: Build Docker file for recon
+        run: docker build -f Dockerfile --progress=plain -t databrewllc/reconmonitoring:latest .
+      - name: Push to Dockerhub
+        run: docker push databrewllc/reconmonitoring:latest
+
