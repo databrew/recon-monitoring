@@ -18,8 +18,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build Docker Base
+      - name: Checkout Repository
         uses: actions/checkout@v3
+      - name: Build Docker Base
         run: |
           cd deploy
           ls -la
