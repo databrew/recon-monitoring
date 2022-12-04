@@ -1,5 +1,5 @@
 FROM reconmonitoring_base
-COPY renv.lock renv.lock
+COPY renv.lock.prod renv.lock
 RUN R -e 'renv::restore()'
 COPY reconmonitoring_*.tar.gz /app.tar.gz
 RUN R -e 'remotes::install_local("/app.tar.gz",upgrade="never")'

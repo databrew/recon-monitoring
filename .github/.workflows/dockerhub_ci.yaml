@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working_directory: ./deploy
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build Docker Base
+        run: docker build -f Dockerfile_base --progress=plain -t reconmonitoring_base .
+      - name: Build Deployment Docker from Base
+        run: docker build -f Dockerfile --progress=plain -t databrewllc/reconmonitoring:latest .
+      - name: Docker push to Dockerhub
+        run: docker push databrewllc/reconmonitoring::latest

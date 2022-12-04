@@ -23,15 +23,13 @@ mod_fieldworker_performance_ui <- function(id){
           multiple = TRUE,
           options = list(`actions-box` = TRUE,
                          `live-search` = TRUE)),
-          style="z-index:1002;")
-      ),
-
-      fluidRow(
+          style="z-index:1002;"),
         column(3, actionBttn(
           ns("submit"),
           "Submit Selection",
           color = "primary",
-          style = 'unite'))
+          style = 'unite'),
+          style = 'margin-top:20px')
       ),
       br(),
       fluidRow(
@@ -127,7 +125,7 @@ mod_fieldworker_performance_server <- function(input, output, session){
     dplyr::inner_join(hh %>%
                        dplyr::group_by(wid) %>%
                        dplyr::summarise(
-                         num_household_form_submitted = n()),
+                         num_household_form_submitted = n_distinct(hh_id)),
                      by = "wid") %>%
     dplyr::distinct(wid, .keep_all = TRUE) %>%
     dplyr::mutate(
@@ -273,7 +271,9 @@ mod_fieldworker_performance_server <- function(input, output, session){
         num_household_form_submitted = colDef(aggregate = "sum"),
         num_households = colDef(aggregate = "sum"),
         percent_completion = colDef(aggregate = js_func,
-                                    format = colFormat(percent = TRUE, digits = 1))
+                                    format = colFormat(
+                                      percent = TRUE,
+                                      digits = 1))
       )
     )
   })

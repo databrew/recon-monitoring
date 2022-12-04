@@ -44,6 +44,11 @@ app_ui <- function() {
           icon = shiny::icon("bars-progress")
         ),
         menuSubItem(
+          text="Fieldworker Performance",
+          tabName="fieldworker_performance",
+          icon = shiny::icon("users")
+        ),
+        menuSubItem(
           text="Anomalies",
           tabName="anomalies",
           icon = shiny::icon("circle-exclamation")
@@ -52,16 +57,7 @@ app_ui <- function() {
           text="Internet Coverage",
           tabName="internet_coverage",
           icon = shiny::icon("wifi")
-        ),
-        menuSubItem(
-          text="Fieldworker Performance",
-          tabName="fieldworker_performance",
-          icon = shiny::icon("users")
         )
-      ),
-      menuItem(
-        text = 'Documentation',
-        tabName = 'docu'
       )
     )
   )

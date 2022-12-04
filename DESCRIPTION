@@ -32,7 +32,8 @@ Imports:
     shinyalert,
     mapview,
     paws,
-    waiter
+    waiter,
+    reactable
 RoxygenNote: 7.2.2
 Remotes:
   ricardo-bion/ggradar,

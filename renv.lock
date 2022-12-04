@@ -1779,6 +1779,12 @@
         "xopen"
       ]
     },
+    "reactable": {
+      "Package": "reactable",
+      "Version": "0.3.0",
+      "Source": "Repository",
+      "Requirements": []
+    },
     "readr": {
       "Package": "readr",
       "Version": "2.1.3",

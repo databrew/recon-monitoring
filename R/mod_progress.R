@@ -14,23 +14,21 @@ mod_progress_ui <- function(id){
   tagList(
     fluidPage(
       fluidRow(
-        column(6, pickerInput(ns("ward"), "Select Ward:", "",
+        column(3, pickerInput(ns("ward"), "Select Ward:", "",
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
                style="z-index:1002;"),
-        column(6, pickerInput(ns("community_health_unit"), "Select CHU:", "",
+        column(3, pickerInput(ns("community_health_unit"), "Select CHU:", "",
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE,
                                              `live-search` = TRUE)),
                style="z-index:1002;"),
-      ),
-      fluidRow(
         column(3, actionBttn(ns("submit"),
                              "Submit Selection",
                              color = "primary",
-                             style = 'unite'))
-
+                             style = 'unite'),
+               style = 'margin-top:20px')
       ),
       br(),
       fluidRow(
@@ -44,7 +42,8 @@ mod_progress_ui <- function(id){
         column(6, box(
           title = 'Map of Household Submissions',
           leafletOutput(ns('map_plot'), height = 400),
-          width = NULL, solidHeader= TRUE, )),
+          width = NULL,
+          solidHeader= TRUE)),
         column(6, box(
           title = 'Cumulative Form Submissions by Day',
           plotlyOutput(ns('cumulative_submission'), height = 400),
@@ -91,7 +90,8 @@ mod_progress_server <- function(input, output, session, data){
   values <- reactiveValues(
     orig_data = hh,
     filter_data = hh,
-    chv_target = chv_target,
+    orig_chv_target = chv_target,
+    filter_chv_target = chv_target,
     ward_list = ward_list,
     community_health_unit_list = community_health_unit_list
   )
@@ -118,13 +118,26 @@ mod_progress_server <- function(input, output, session, data){
   observeEvent(input$submit, {
     values$filter_data <- values$orig_data %>%
       dplyr::filter(ward %in% input$ward) %>%
-      dplyr::filter(community_health_unit %in% input$community_health_unit)
+      dplyr::filter(
+        community_health_unit %in%
+          input$community_health_unit)
+    values$filter_chv_target <- values$orig_chv_target
   }, ignoreNULL=FALSE)
+
+  observe({
+    print(values$orig_chv_target$hh_id %>%
+            unique() %>%
+            length())
+  })
 
   # ---- RENDER PLOT FROM REACTIVE DATA ---- #
   output$total_chv <- renderInfoBox({
-
-    num_chv <- values$chv_target$wid %>%
+    if(input$submit == 0){
+      data <- values$orig_chv_target
+    }else{
+      data <- values$filter_chv_target
+    }
+    num_chv <- data$wid %>%
       unique() %>%
       length()
 
@@ -144,12 +157,9 @@ mod_progress_server <- function(input, output, session, data){
       data <- values$filter_data
     }
 
-    total_hh <- data %>%
-      .$hh_id %>%
+    total_hh <- data$hh_id %>%
       unique() %>%
       length()
-
-    chv_target <- sum(values$chv_target$num_households)
 
     infoBox(
       "Household Forms Submitted by CHV",
@@ -162,17 +172,18 @@ mod_progress_server <- function(input, output, session, data){
 
   output$percent_hh <- renderInfoBox({
     if(input$submit == 0){
-      data <- values$orig_data
+      chv_data <- values$orig_chv_target
+      hh_data <- values$orig_data
     }else{
-      data <- values$filter_data
+      chv_data <- values$filter_chv_target
+      hh_data <- values$filter_data
     }
-
-    total_hh <- data %>%
+    total_hh <- hh_data %>%
       .$hh_id %>%
       unique() %>%
       length()
 
-    chv_target <- sum(values$chv_target$num_households)
+    chv_target <- sum(chv_data$num_households)
 
     perc <- total_hh/chv_target
 
@@ -197,22 +208,19 @@ mod_progress_server <- function(input, output, session, data){
 
 
   output$map_plot <- renderLeaflet({
-
-    data <- values$filter_data %>%
-      dplyr::filter(!is.na(Longitude))
-
-    content <- paste0(
-    "
-    <strong>Household ID</strong>: {hh_id}</br>
-    <strong>Ward</strong>: {ward}</br>
-    <strong>CHU</strong>: {community_health_unit}</br>
-    ")
-
     if(input$submit == 0){
       data <- values$orig_data
     }else{
       data <- values$filter_data
     }
+
+    content <- paste0(
+      "
+    <strong>Household ID</strong>: {hh_id}</br>
+    <strong>Ward</strong>: {ward}</br>
+    <strong>CHU</strong>: {community_health_unit}</br>
+    ")
+
 
     data <- data %>%
       as_tibble(.name_repair = "universal") %>%
