@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working_directory: ./deploy
+        working-directory: ./deploy
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
