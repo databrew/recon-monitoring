@@ -2,7 +2,7 @@
 
 export(get_anomalies_data)
 export(get_household_forms)
-export(get_registartion_forms)
+export(get_registration_forms)
 export(run_app)
 import(RColorBrewer)
 import(data.table)

@@ -72,7 +72,7 @@ mod_progress_ui <- function(id){
 mod_progress_server <- function(input, output, session, data){
 
   hh <- get_household_forms()
-  registration <- get_registartion_forms()
+  registration <- get_registration_forms()
 
   chv_target <- registration %>%
     dplyr::filter(worker_type == 'CHV') %>%

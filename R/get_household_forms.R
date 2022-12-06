@@ -10,7 +10,7 @@ get_household_forms <- function(){
     Bucket= 'databrew.org',
     Key = "kwale/clean-form/reconbhousehold/reconbhousehold.csv",
     Filename = filename)
-  hh <- read.csv(filename, row.names = 1) %>%
+  hh <- fread(filename) %>%
     tibble::as_tibble(.name_repair = "unique") %>%
     tidyr::drop_na(wid_qr) %>%
     dplyr::mutate(

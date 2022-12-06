@@ -11,7 +11,7 @@ get_anomalies_data <- function(){
     Key = "kwale/anomalies/anomalies.csv",
     Filename = filename)
 
-  anomalies <- read.csv(filename, row.names = 1) %>%
+  anomalies <- fread(filename) %>%
     tibble::as_tibble(.name_repair = "unique")
   return(anomalies)
 }

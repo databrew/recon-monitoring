@@ -80,7 +80,7 @@ mod_fieldworker_performance_ui <- function(id){
 mod_fieldworker_performance_server <- function(input, output, session){
   ns <- session$ns
 
-  registration <-  get_registartion_forms()
+  registration <-  get_registration_forms()
   hh <- get_household_forms() %>%
     dplyr::select(-end_time)
 
@@ -164,6 +164,18 @@ mod_fieldworker_performance_server <- function(input, output, session){
     dplyr::mutate(internet_conn = coalesce(
       internet_conn_cha, internet_conn_chv))
 
+
+  ##################################
+  # Get list
+  ##################################
+  cha_list <- cha_data %>%
+    .$wid %>%
+    unique()
+
+  chv_list <- chv_data %>%
+    .$wid %>%
+    unique()
+
   ##################################
   # Data for maps
   ##################################
@@ -177,17 +189,12 @@ mod_fieldworker_performance_server <- function(input, output, session){
                   community_health_unit) %>%
     dplyr::inner_join(chv_data %>%
                        dplyr::select(wid, wid_cha) %>%
-                       distinct(), by = "wid")
+                       distinct(), by = "wid") %>%
+    dplyr::mutate(wid_cha = factor(wid_cha)) %>%
+    dplyr::filter(!is.na(Latitude),
+                  !is.na(Longitude),
+                  wid_cha %in% cha_list)
 
-
-
-  cha_list <- cha_data %>%
-    .$wid %>%
-    unique()
-
-  chv_list <- chv_data %>%
-    .$wid %>%
-    unique()
 
 
   values <- reactiveValues(
@@ -321,52 +328,21 @@ mod_fieldworker_performance_server <- function(input, output, session){
                                   "CHV ID: {wid}")
 
     data <- data  %>%
-      as_tibble(.name_repair = "universal") %>%
-      dplyr::filter(!is.na(Latitude), !is.na(Longitude)) %>%
       dplyr::mutate(content = glue::glue(content_placeholder))
 
+    pal <- colorFactor(palette = "Dark2",
+                        domain = unique(data$wid_cha))
 
     leaflet(data) %>%
       addProviderTiles("CartoDB.Positron") %>%
       addCircleMarkers(
         lng=~Longitude,
         stroke = FALSE,
-        color = 'darkblue',
         fillOpacity = 0.5,
         radius = 3,
         lat=~Latitude,
-        popup=~content)
-  })
-
-
-  output$chv_map_plot <- renderLeaflet({
-    if(input$submit == 0){
-      data <- values$orig_map_data
-    }else{
-      data <- values$filter_map_data
-    }
-
-    content_placeholder <- paste0("Household ID: {hh_id}<br/>",
-                                  "Ward: {ward}<br/>",
-                                  "CHV ID: {wid}")
-    data <- data  %>%
-      as_tibble(.name_repair = "universal") %>%
-      dplyr::filter(!is.na(Latitude), !is.na(Longitude)) %>%
-      dplyr::mutate(content = glue::glue(content_placeholder))
-
-
-
-
-    leaflet(data) %>%
-      addProviderTiles("CartoDB.Positron") %>%
-      addCircleMarkers(
-        lng=~Longitude,
-        stroke = FALSE,
-        color = 'darkblue',
-        fillOpacity = 0.9,
-        radius = 3,
-        lat=~Latitude,
-        popup=~content)
+        popup=~content,
+        color = ~pal(wid_cha))
   })
 
 }
