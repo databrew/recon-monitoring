@@ -12,15 +12,18 @@ get_household_forms <- function(){
     Filename = filename)
   hh <- fread(filename) %>%
     tibble::as_tibble(.name_repair = "unique") %>%
-    tidyr::drop_na(wid_qr) %>%
+    mutate(wid = as.character(ifelse(is.na(wid_qr), wid_manual, wid_qr))) %>%
     dplyr::mutate(
-      wid = as.character(wid_qr),
       Latitude = as.numeric(Latitude),
       Longitude = as.numeric(Longitude),
       ward = ifelse(ward == "", "N/A", ward),
       community_health_unit = ifelse(community_health_unit == "", "N/A", community_health_unit),
-      village = ifelse(village == "", "N/A", village)) %>%
+      village = ifelse(village == "", "N/A", village),
+      house_wall_material = ifelse(nchar(house_wall_material_other) > 0, house_wall_material_other, house_wall_material),
+      roof_type = ifelse(nchar(roof_type_other) > 0, roof_type_other, roof_type)) %>%
     dplyr::select(
+      todays_date,
+      have_wid,
       wid,
       hh_id,
       ward,
@@ -29,6 +32,15 @@ get_household_forms <- function(){
       Longitude,
       Latitude,
       SubmissionDate,
-      end_time)
+      start_time,
+      end_time,
+      # Additional variables useful for analysis (so we can use this functionality for both analyses, reports, and dashboard)
+      house_wall_material,
+      roof_type,
+      num_hh_members,
+      num_hh_members_lt_5,
+      num_hh_members_gt_15,
+      num_hh_members_bt_5_15 = X15
+      )
   return(hh)
 }
