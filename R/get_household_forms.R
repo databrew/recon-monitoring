@@ -22,6 +22,8 @@ get_household_forms <- function(){
       house_wall_material = ifelse(nchar(house_wall_material_other) > 0, house_wall_material_other, house_wall_material),
       roof_type = ifelse(nchar(roof_type_other) > 0, roof_type_other, roof_type)) %>%
     dplyr::select(
+      todays_date,
+      have_wid,
       wid,
       hh_id,
       ward,
@@ -30,6 +32,7 @@ get_household_forms <- function(){
       Longitude,
       Latitude,
       SubmissionDate,
+      start_time,
       end_time,
       # Additional variables useful for analysis (so we can use this functionality for both analyses, reports, and dashboard)
       house_wall_material,
