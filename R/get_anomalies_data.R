@@ -4,10 +4,11 @@
 #' @return tibble dataframe
 #' @export
 get_anomalies_data <- function(){
+  bucket_name <- 'databrew.org'
   s3obj <- paws::s3()
   filename <- tempfile(fileext = '.csv')
   bucket_key <- s3obj$list_objects_v2(
-    Bucket = S3_BUCKET_NAME,
+    Bucket = bucket_name,
     Prefix = 'kwale/anomalies/anomalies-identification-history/run_date') %>%
     .$Contents %>%
     tail(1) %>%
@@ -16,7 +17,7 @@ get_anomalies_data <- function(){
 
 
   s3obj$download_file(
-    Bucket= 'databrew.org',
+    Bucket= bucket_name,
     Key = bucket_key,
     Filename = filename)
 
