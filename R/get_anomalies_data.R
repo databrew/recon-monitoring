@@ -6,9 +6,18 @@
 get_anomalies_data <- function(){
   s3obj <- paws::s3()
   filename <- tempfile(fileext = '.csv')
+  bucket_key <- s3obj$list_objects_v2(
+    Bucket = S3_BUCKET_NAME,
+    Prefix = 'kwale/anomalies/anomalies-identification-history/run_date') %>%
+    .$Contents %>%
+    tail(1) %>%
+    .[[1]] %>%
+    .$Key
+
+
   s3obj$download_file(
     Bucket= 'databrew.org',
-    Key = "kwale/anomalies/anomalies.csv",
+    Key = bucket_key,
     Filename = filename)
 
   anomalies <- fread(filename) %>%

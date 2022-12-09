@@ -69,9 +69,6 @@ app_ui <- function() {
 
     tags$head(tags$style(HTML('
                                 /* logo */
-                                .skin-blue .main-header .logo {
-                                background-color: #003366;
-                                }
 
                                 /* navbar (rest of the header) */
                                 .skin-blue .main-header .navbar {
@@ -80,11 +77,20 @@ app_ui <- function() {
 
                                 /* body */
                                 .content-wrapper, .right-side {
-                                background-color: #F5F5F5;
+                                background-color: #FFFFFF;
                                 }
 
                                 .box-header h3.box-title {
                                   font-size: 24px;
+                                }
+
+                                .box-header h3 {
+                                font-weight: bold;
+                                }
+
+                                .info-box .logo {
+                                font-weight: bold;
+                                font-size: 8px;
                                 }
 
                                 '))),
@@ -100,6 +106,7 @@ app_ui <- function() {
         )
       ),
       tabItem(
+        autoWaiter(),
         tabName="progress",
         fluidPage(
           fluidRow(

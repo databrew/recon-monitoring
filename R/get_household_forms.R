@@ -11,7 +11,6 @@ get_household_forms <- function(){
     Key = "kwale/clean-form/reconbhousehold/reconbhousehold.csv",
     Filename = filename)
   hh <- fread(filename) %>%
-    tibble::as_tibble(.name_repair = "unique") %>%
     mutate(wid = as.character(ifelse(is.na(wid_qr), wid_manual, wid_qr))) %>%
     dplyr::mutate(
       Latitude = as.numeric(Latitude),
@@ -40,7 +39,7 @@ get_household_forms <- function(){
       num_hh_members,
       num_hh_members_lt_5,
       num_hh_members_gt_15,
-      num_hh_members_bt_5_15 = X15
+      num_hh_members_bt_5_15 = `15`
       )
   return(hh)
 }

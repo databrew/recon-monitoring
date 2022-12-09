@@ -41,6 +41,7 @@ mod_progress_ui <- function(id){
       fluidRow(
         column(6, box(
           title = 'Map of Household Submissions',
+          footer = 'Household Form submission by each CHV, click to see more details',
           leafletOutput(ns('map_plot'), height = 400),
           width = NULL,
           solidHeader= TRUE)),
@@ -104,6 +105,7 @@ mod_progress_server <- function(input, output, session, data){
                       choices = sort(community_health_unit_list),
                       selected = community_health_unit_list)
   })
+  waiter_hide()
 
   observeEvent(input$ward, {
     f <- values$orig_data %>%
@@ -124,11 +126,6 @@ mod_progress_server <- function(input, output, session, data){
     values$filter_chv_target <- values$orig_chv_target
   }, ignoreNULL=FALSE)
 
-  observe({
-    print(values$orig_chv_target$hh_id %>%
-            unique() %>%
-            length())
-  })
 
   # ---- RENDER PLOT FROM REACTIVE DATA ---- #
   output$total_chv <- renderInfoBox({
@@ -145,7 +142,7 @@ mod_progress_server <- function(input, output, session, data){
       "Total CHV",
       h3(num_chv),
       icon = icon("user"),
-      color = 'navy',
+      color = 'black',
       width = 6
     )
   })
@@ -165,7 +162,7 @@ mod_progress_server <- function(input, output, session, data){
       "Household Forms Submitted by CHV",
       h3(total_hh),
       icon = icon("house"),
-      color = 'navy',
+      color = 'black',
       width = 6
     )
   })
@@ -201,7 +198,7 @@ mod_progress_server <- function(input, output, session, data){
       title,
       h3(perc),
       icon = icon("percent"),
-      color = 'navy',
+      color = 'black',
       width = 6
     )
   })
@@ -219,6 +216,7 @@ mod_progress_server <- function(input, output, session, data){
     <strong>Household ID</strong>: {hh_id}</br>
     <strong>Ward</strong>: {ward}</br>
     <strong>CHU</strong>: {community_health_unit}</br>
+    <strong>CHV</strong>: {wid}</br>
     ")
 
 
@@ -237,7 +235,7 @@ mod_progress_server <- function(input, output, session, data){
         radius = 3,
         lat=~Latitude,
         popup=~content)
-  })
+  }) %>% bindCache(values$orig_data, values$filter_data, cache = cachem::cache_disk("./myapp-cache"))
 
   output$cumulative_submission <- renderPlotly({
 
@@ -260,7 +258,7 @@ mod_progress_server <- function(input, output, session, data){
                           legend.position = "none") +
                     labs(x = "", y = ""))
     p
-  })
+  }) %>% bindCache(values$orig_data, values$filter_data, cache = cachem::cache_disk("./myapp-cache"))
 
 
   output$submission_by_day <- renderPlotly({
@@ -297,7 +295,7 @@ mod_progress_server <- function(input, output, session, data){
                           legend.position = "none")
                     )
     p
-  })
+  }) %>% bindCache(values$orig_data, values$filter_data, cache = cachem::cache_disk("./myapp-cache"))
 
   output$submission_by_filter <- renderPlotly({
     if(input$submit == 0){
@@ -322,6 +320,6 @@ mod_progress_server <- function(input, output, session, data){
                     scale_fill_brewer(palette="Dark2")
                     )
     p
-  })
+  }) %>% bindCache(values$orig_data, values$filter_data, cache = cachem::cache_disk("./myapp-cache"))
 
 }

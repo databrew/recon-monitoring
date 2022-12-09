@@ -13,22 +13,31 @@ mod_internet_coverage_ui <- function(id){
     fluidPage(
       fluidRow(
         column(6, box(
-          title = 'Time Lag Distribution',
-          plotlyOutput(ns('time_lag_dist'), height = 400),
+          title = 'Internet Coverage Map',
+          leafletOutput(ns('lag_map_plot'), height = 400),
+          width = NULL, solidHeader= TRUE, )),
+        column(6, fluidRow(
+          box(
+            title = 'Time Lag Distribution',
+            plotlyOutput(ns('time_lag_dist'), height = 400),
+            width = NULL, solidHeader= TRUE)
+
+        )),
+      ),
+      fluidRow(
+        column(6, box(
+          title = 'Internet Coverage Table',
+          tags$button(
+            tagList(icon("download"), "Download"),
+            onclick = sprintf("Reactable.downloadDataCSV('%s', '%s')",
+                              ns('time_lag_table'),
+                              "internet_coverage.csv")
+          ),
+          reactableOutput(ns("time_lag_table"), height = 400),
           width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'Time Lag Distribution by Ward',
           plotlyOutput(ns('time_lag_dist_by_ward'), height = 400),
-          width = NULL, solidHeader= TRUE, ))
-      ),
-      fluidRow(
-        column(6, box(
-          title = 'Time Lag Raw Table',
-          DT::dataTableOutput(ns("time_lag_table"), height = 400),
-          width = NULL, solidHeader= TRUE, )),
-        column(6, box(
-          title = 'Lag Map',
-          leafletOutput(ns('lag_map_plot'), height = 400),
           width = NULL, solidHeader= TRUE, ))
       )
     )
@@ -75,30 +84,16 @@ mod_internet_coverage_server <- function(input, output, session){
       )
     })
 
-    output$time_lag_table = DT::renderDataTable({
+    output$time_lag_table = renderReactable({
       data <- values$orig_data
-      DT::datatable(data %>%
-                      dplyr::select(hh_id,
-                                    SubmissionDate,
-                                    end_time,
-                                    lag,
-                                    ward,
-                                    community_health_unit,village),
-                    extensions = 'Buttons',
-                    options = list(
-                      dom = 'Bfrtip',
-                      searching = FALSE,
-                      pageLength = 5,
-                      scrollX=TRUE,
-                      buttons = list(
-                        list(extend = "csv", text = "Download Full Results", filename = "data",
-                             exportOptions = list(
-                               modifier = list(page = "all")
-                             )
-                        )
-                      ),
-                      fixedColumns = list(leftColumns = 2)
-                    )
+      reactable(data %>%
+                  dplyr::select(
+                    hh_id,
+                    SubmissionDate,
+                    end_time,
+                    lag,
+                    ward,
+                    community_health_unit,village)
                   )
     })
 
