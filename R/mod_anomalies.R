@@ -36,7 +36,7 @@ mod_anomalies_ui <- function(id){
       ),
       fluidRow(
         column(12, box(
-          title = 'CHV Raw Table',
+          title = 'Anomalies Identifed',
           tags$button(
             tagList(icon("download"), "Download"),
             onclick = sprintf("Reactable.downloadDataCSV('%s', '%s')",
