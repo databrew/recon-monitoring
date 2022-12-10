@@ -36,7 +36,8 @@ mod_fieldworker_performance_ui <- function(id){
         column(6, box(
           title = 'Submissions Map',
           footer = 'Household Form submission by each CHV under CHA, click to see more details',
-          leafletOutput(ns('cha_map_plot'), height = 400),
+          leafletOutput(ns('cha_map_plot'), height = 400) %>%
+            shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE)),
         column(6, box(
           title = 'Fieldworker Summary Table',
@@ -46,7 +47,8 @@ mod_fieldworker_performance_ui <- function(id){
                               ns('cha_chv_summary_table'),
                               "summary_performance_cha.csv")
           ),
-          reactableOutput(ns('cha_chv_summary_table'), height = 375),
+          reactableOutput(ns('cha_chv_summary_table'), height = 375) %>%
+            shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, ))
       ),
       fluidRow(
@@ -58,7 +60,8 @@ mod_fieldworker_performance_ui <- function(id){
                               ns('cha_table'),
                               "cha.csv")
           ),
-          reactableOutput(ns('cha_table'), height = 400),
+          reactableOutput(ns('cha_table'), height = 400) %>%
+            shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'CHV Raw Table',
@@ -68,7 +71,8 @@ mod_fieldworker_performance_ui <- function(id){
                               ns('chv_table'),
                               "chv.csv")
           ),
-          reactableOutput(ns('chv_table'), height = 400),
+          reactableOutput(ns('chv_table'), height = 400) %>%
+            shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, ))
         )
       )
@@ -642,16 +646,10 @@ mod_fieldworker_performance_server <- function(input, output, session){
       groupBy = c("wid_cha"),
       columns = list(
         num_household_form_submitted = colDef(aggregate = "sum"),
-        num_households = colDef(aggregate = "sum"),
-        percent_completion = colDef(aggregate = js_func,
-                                    format = colFormat(
-                                      percent = TRUE,
-                                      digits = 1))
+        num_households = colDef(aggregate = "sum")
       )
     )
-  }) %>% bindCache(values$orig_cha_data,
-                   values$filter_cha_chv_data,
-                   cache = cachem::cache_disk("./myapp-cache"))
+  })
 
   output$cha_table = renderReactable({
     if(input$submit == 0){
@@ -679,9 +677,7 @@ mod_fieldworker_performance_server <- function(input, output, session){
       data <- values$filter_chv_data
     }
     reactable(data)
-  }) %>% bindCache(values$orig_chv_data,
-                   values$filter_chv_data,
-                   cache = cachem::cache_disk("./myapp-cache"))
+  })
 
 
   output$cha_map_plot <- renderLeaflet({
@@ -713,9 +709,7 @@ mod_fieldworker_performance_server <- function(input, output, session){
         lat=~Latitude,
         popup=~content,
         color = ~pal(wid_cha))
-  }) %>% bindCache(values$orig_map_data,
-                   values$filter_map_data,
-                   cache = cachem::cache_disk("./myapp-cache"))
+  })
 
 }
 

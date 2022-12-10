@@ -27,11 +27,11 @@ mod_anomalies_ui <- function(id){
       fluidRow(
         column(6, box(
           title = 'Number of Anomalies by Type',
-          plotlyOutput(ns('anomalies_by_type_plot'), height = 400),
+          plotlyOutput(ns('anomalies_by_type_plot'), height = 400) %>% shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE,)),
         column(6, box(
           title = 'Number of Anomalies by Date',
-          plotlyOutput(ns('anomalies_by_date_plot'), height = 400),
+          plotlyOutput(ns('anomalies_by_date_plot'), height = 400) %>% shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE,))
       ),
       fluidRow(
@@ -43,7 +43,7 @@ mod_anomalies_ui <- function(id){
                               ns('anomalies_table'),
                               "anomalies.csv")
           ),
-          reactableOutput(ns('anomalies_table'), height = 400),
+          reactableOutput(ns('anomalies_table'), height = 400) %>% shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, ))
       )
     )

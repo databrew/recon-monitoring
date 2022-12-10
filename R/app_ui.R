@@ -18,6 +18,8 @@
 #' @import shinyalert
 #' @import scales
 #' @import reactable
+#' @import shinycssloaders
+#' @import magrittr
 #' @importFrom shiny NS tagList
 app_ui <- function() {
 
@@ -106,11 +108,18 @@ app_ui <- function() {
         )
       ),
       tabItem(
-        autoWaiter(),
         tabName="progress",
         fluidPage(
           fluidRow(
             mod_progress_ui("household")
+          )
+        )
+      ),
+      tabItem(
+        tabName="fieldworker_performance",
+        fluidPage(
+          fluidRow(
+            mod_fieldworker_performance_ui("registration")
           )
         )
       ),
@@ -129,17 +138,7 @@ app_ui <- function() {
             mod_internet_coverage_ui("household")
           )
         )
-      ),
-      tabItem(
-        tabName="fieldworker_performance",
-        fluidPage(
-          fluidRow(
-            mod_fieldworker_performance_ui("registration")
-          )
-        )
       )
-
-
     )
   )
 

@@ -42,25 +42,25 @@ mod_progress_ui <- function(id){
         column(6, box(
           title = 'Map of Household Submissions',
           footer = 'Household Form submission by each CHV, click to see more details',
-          leafletOutput(ns('map_plot'), height = 400),
+          leafletOutput(ns('map_plot'), height = 400) %>% shinycssloaders::withSpinner(),
           width = NULL,
           solidHeader= TRUE)),
         column(6, box(
           title = 'Cumulative Form Submissions by Day',
-          plotlyOutput(ns('cumulative_submission'), height = 400),
+          plotlyOutput(ns('cumulative_submission'), height = 400) %>% shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, ))
       ),
       fluidRow(
         column(6, box(
           title = 'Submission by Day',
-          plotlyOutput(ns('submission_by_day'), height = 380),
+          plotlyOutput(ns('submission_by_day'), height = 380) %>% shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'Submission by Group',
           selectInput(ns("filter_group"), "View by:",
                       choices = c('ward', 'community_health_unit'),
                       selected = 'Ward'),
-          plotlyOutput(ns('submission_by_filter'), height = 300),
+          plotlyOutput(ns('submission_by_filter'), height = 300) %>% shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, ))
 
       )
@@ -105,7 +105,6 @@ mod_progress_server <- function(input, output, session, data){
                       choices = sort(community_health_unit_list),
                       selected = community_health_unit_list)
   })
-  waiter_hide()
 
   observeEvent(input$ward, {
     f <- values$orig_data %>%
@@ -235,7 +234,7 @@ mod_progress_server <- function(input, output, session, data){
         radius = 3,
         lat=~Latitude,
         popup=~content)
-  }) %>% bindCache(values$orig_data, values$filter_data, cache = cachem::cache_disk("./myapp-cache"))
+  })
 
   output$cumulative_submission <- renderPlotly({
 
@@ -258,7 +257,7 @@ mod_progress_server <- function(input, output, session, data){
                           legend.position = "none") +
                     labs(x = "", y = ""))
     p
-  }) %>% bindCache(values$orig_data, values$filter_data, cache = cachem::cache_disk("./myapp-cache"))
+  })
 
 
   output$submission_by_day <- renderPlotly({
@@ -295,7 +294,7 @@ mod_progress_server <- function(input, output, session, data){
                           legend.position = "none")
                     )
     p
-  }) %>% bindCache(values$orig_data, values$filter_data, cache = cachem::cache_disk("./myapp-cache"))
+  })
 
   output$submission_by_filter <- renderPlotly({
     if(input$submit == 0){
@@ -320,6 +319,6 @@ mod_progress_server <- function(input, output, session, data){
                     scale_fill_brewer(palette="Dark2")
                     )
     p
-  }) %>% bindCache(values$orig_data, values$filter_data, cache = cachem::cache_disk("./myapp-cache"))
+  })
 
 }

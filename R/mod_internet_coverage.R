@@ -14,12 +14,12 @@ mod_internet_coverage_ui <- function(id){
       fluidRow(
         column(6, box(
           title = 'Internet Coverage Map',
-          leafletOutput(ns('lag_map_plot'), height = 400),
+          leafletOutput(ns('lag_map_plot'), height = 400) %>% shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, )),
         column(6, fluidRow(
           box(
             title = 'Time Lag Distribution',
-            plotlyOutput(ns('time_lag_dist'), height = 400),
+            plotlyOutput(ns('time_lag_dist'), height = 400) %>% shinycssloaders::withSpinner(),
             width = NULL, solidHeader= TRUE)
 
         )),
@@ -33,11 +33,11 @@ mod_internet_coverage_ui <- function(id){
                               ns('time_lag_table'),
                               "internet_coverage.csv")
           ),
-          reactableOutput(ns("time_lag_table"), height = 400),
+          reactableOutput(ns("time_lag_table"), height = 400) %>% shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, )),
         column(6, box(
           title = 'Time Lag Distribution by Ward',
-          plotlyOutput(ns('time_lag_dist_by_ward'), height = 400),
+          plotlyOutput(ns('time_lag_dist_by_ward'), height = 400) %>% shinycssloaders::withSpinner(),
           width = NULL, solidHeader= TRUE, ))
       )
     )
