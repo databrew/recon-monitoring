@@ -14,7 +14,7 @@
 #' @noRd
 app_server <- function(input, output, session) {
   # shinyOptions(cache = cachem::cache_disk("./myapp-cache"))
-  callModule(mod_fieldworker_performance_server, 'registration')
+  callModule(mod_fieldworker_server, 'registration')
   callModule(mod_landing_page_server, 'landing')
   callModule(mod_progress_server, 'household')
   callModule(mod_anomalies_server, 'anomalies')

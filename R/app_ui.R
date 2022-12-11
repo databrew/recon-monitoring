@@ -119,7 +119,7 @@ app_ui <- function() {
         tabName="fieldworker_performance",
         fluidPage(
           fluidRow(
-            mod_fieldworker_performance_ui("registration")
+            mod_fieldworker_ui("registration")
           )
         )
       ),
