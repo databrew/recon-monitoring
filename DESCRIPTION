@@ -1,56 +1,50 @@
 Package: reconmonitoring
 Title: Recon Monitoring ShinyApp
 Version: 0.0.0.9000
-Authors@R: person('Aryton', 'Tediarjo', email = 'atediarjo@gmail.com', role = c('cre', 'aut'))
+Authors@R: 
+    person("Aryton", "Tediarjo", , "atediarjo@gmail.com", role = c("cre", "aut"))
 Description: A Shiny app / R package for Reon Monitoring
 License: MIT + file LICENSE
-Encoding: UTF-8
-LazyData: true
-Imports: 
-    shiny,
-    golem,
-    config,
-    ggradar,
-    ggthemes,
-    plotly,
-    reshape2,
-    scales,
-    shinyURL,
-    tidyverse,
-    shinyWidgets,
-    DT,
-    glue,
-    htmltools,
-    dplyr,
-    tidyr,
-    ggplot2,
-    leaflet,
-    RColorBrewer,
-    sp,
-    shinyjs,
-    shinydashboard,
-    shinyalert,
-    mapview,
-    paws,
-    waiter,
-    reactable
-RoxygenNote: 7.2.2
-Remotes:
-  ricardo-bion/ggradar,
-  aoles/shinyURL,
-  r-spatial/mapview
-Suggests: 
-    testthat (>= 2.1.0),
-    knitr,
-    rmarkdown,
-    pkgload,
-    extrafont,
-    ggimage,
-    stringr,
-    forcats,
-    hexSticker,
-    processx,
-    attempt
-VignetteBuilder: knitr
 Depends: 
     R (>= 2.10)
+Imports: 
+    config,
+    data.table,
+    dplyr,
+    forcats,
+    ggplot2,
+    ggradar,
+    glue,
+    golem,
+    htmltools,
+    leaflet,
+    lubridate,
+    magrittr,
+    mapview,
+    paws,
+    plotly,
+    purrr,
+    RColorBrewer,
+    reactable,
+    scales,
+    shiny,
+    shinyalert,
+    shinycssloaders,
+    shinydashboard,
+    shinyjs,
+    shinyURL,
+    shinyWidgets,
+    sp,
+    stringr,
+    tibble,
+    tidyr,
+    waiter
+VignetteBuilder: 
+    knitr
+Remotes:
+    aoles/shinyURL,
+    r-spatial/mapview,
+    ricardo-bion/ggradar
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.2
