@@ -17,6 +17,7 @@ Imports:
     glue,
     golem,
     htmltools,
+    jsonlite,
     leaflet,
     lubridate,
     magrittr,
@@ -32,6 +33,7 @@ Imports:
     shinycssloaders,
     shinydashboard,
     shinyjs,
+    shinymanager,
     shinyURL,
     shinyWidgets,
     sp,
@@ -39,7 +41,6 @@ Imports:
     tibble,
     tidyr,
     waiter,
-    shinymanager,
     zoo
 VignetteBuilder: 
     knitr

@@ -25,6 +25,22 @@
       "Hash": "b2866e62bab9378c3cc9476a1954226b",
       "Requirements": []
     },
+    "DT": {
+      "Package": "DT",
+      "Version": "0.26",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "c66a72c4d3499e14ae179ccb742e740a",
+      "Requirements": [
+        "crosstalk",
+        "htmltools",
+        "htmlwidgets",
+        "jquerylib",
+        "jsonlite",
+        "magrittr",
+        "promises"
+      ]
+    },
     "KernSmooth": {
       "Package": "KernSmooth",
       "Version": "2.23-20",
@@ -51,6 +67,53 @@
         "lattice"
       ]
     },
+    "R.methodsS3": {
+      "Package": "R.methodsS3",
+      "Version": "1.8.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "R.methodsS3",
+      "RemoteRef": "R.methodsS3",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-apple-darwin17.0",
+      "RemoteSha": "1.8.2",
+      "Hash": "278c286fd6e9e75d0c2e8f731ea445c8",
+      "Requirements": []
+    },
+    "R.oo": {
+      "Package": "R.oo",
+      "Version": "1.25.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "R.oo",
+      "RemoteRef": "R.oo",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-apple-darwin17.0",
+      "RemoteSha": "1.25.0",
+      "Hash": "a0900a114f4f0194cf4aa8cd4a700681",
+      "Requirements": [
+        "R.methodsS3"
+      ]
+    },
+    "R.utils": {
+      "Package": "R.utils",
+      "Version": "2.12.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "R.utils",
+      "RemoteRef": "R.utils",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-apple-darwin17.0",
+      "RemoteSha": "2.12.2",
+      "Hash": "325f01db13da12c04d8f6e7be36ff514",
+      "Requirements": [
+        "R.methodsS3",
+        "R.oo"
+      ]
+    },
     "R6": {
       "Package": "R6",
       "Version": "2.5.1",
@@ -75,6 +138,27 @@
       "Hash": "ea2f19dade6bd911b29b9bbb115d08f6",
       "Requirements": [
         "bitops"
+      ]
+    },
+    "RSQLite": {
+      "Package": "RSQLite",
+      "Version": "2.2.20",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "RSQLite",
+      "RemoteRef": "RSQLite",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-apple-darwin17.0",
+      "RemoteSha": "2.2.20",
+      "Hash": "b5df65015a2d74c144a1419dab6ffd3b",
+      "Requirements": [
+        "DBI",
+        "Rcpp",
+        "bit64",
+        "blob",
+        "memoise",
+        "pkgconfig"
       ]
     },
     "Rcpp": {
@@ -124,6 +208,47 @@
       "Hash": "543776ae6848fde2f48ff3816d0628bc",
       "Requirements": []
     },
+    "billboarder": {
+      "Package": "billboarder",
+      "Version": "0.4.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "billboarder",
+      "RemoteRef": "billboarder",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-apple-darwin17.0",
+      "RemoteSha": "0.4.0",
+      "Hash": "d43d3ced5249cbb5bac922eca957251f",
+      "Requirements": [
+        "ggplot2",
+        "htmltools",
+        "htmlwidgets",
+        "jsonlite",
+        "magrittr",
+        "rlang",
+        "scales",
+        "shiny"
+      ]
+    },
+    "bit": {
+      "Package": "bit",
+      "Version": "4.0.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "f36715f14d94678eea9933af927bc15d",
+      "Requirements": []
+    },
+    "bit64": {
+      "Package": "bit64",
+      "Version": "4.0.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "9fe98599ca456d6552421db0d6772d8f",
+      "Requirements": [
+        "bit"
+      ]
+    },
     "bitops": {
       "Package": "bitops",
       "Version": "1.0-7",
@@ -131,6 +256,17 @@
       "Repository": "CRAN",
       "Hash": "b7d8d8ee39869c18d8846a184dd8a1af",
       "Requirements": []
+    },
+    "blob": {
+      "Package": "blob",
+      "Version": "1.2.3",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "10d231579bc9c06ab1c320618808d4ff",
+      "Requirements": [
+        "rlang",
+        "vctrs"
+      ]
     },
     "brew": {
       "Package": "brew",
@@ -1417,6 +1553,22 @@
         "viridisLite"
       ]
     },
+    "scrypt": {
+      "Package": "scrypt",
+      "Version": "0.1.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "scrypt",
+      "RemoteRef": "scrypt",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-apple-darwin17.0",
+      "RemoteSha": "0.1.4",
+      "Hash": "a1d1dfd8769a6cda6087b55430b1a901",
+      "Requirements": [
+        "Rcpp"
+      ]
+    },
     "servr": {
       "Package": "servr",
       "Version": "0.25",
@@ -1563,6 +1715,31 @@
       "Requirements": [
         "digest",
         "jsonlite",
+        "shiny"
+      ]
+    },
+    "shinymanager": {
+      "Package": "shinymanager",
+      "Version": "1.0.410",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "RemoteType": "standard",
+      "RemotePkgRef": "shinymanager",
+      "RemoteRef": "shinymanager",
+      "RemoteRepos": "https://cran.rstudio.com",
+      "RemotePkgPlatform": "x86_64-apple-darwin17.0",
+      "RemoteSha": "1.0.410",
+      "Hash": "7992f5ecc5e8d40200dc8ba4e97d33eb",
+      "Requirements": [
+        "DBI",
+        "DT",
+        "R.utils",
+        "R6",
+        "RSQLite",
+        "billboarder",
+        "htmltools",
+        "openssl",
+        "scrypt",
         "shiny"
       ]
     },
@@ -1878,6 +2055,16 @@
       "Repository": "CRAN",
       "Hash": "a7e91189fa51d9029a30eba3831ce53f",
       "Requirements": []
+    },
+    "zoo": {
+      "Package": "zoo",
+      "Version": "1.8-11",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "874a5b77fe0cfacf2a3450069ae70926",
+      "Requirements": [
+        "lattice"
+      ]
     }
   }
 }
