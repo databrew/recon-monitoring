@@ -1,3 +1,7 @@
+#' The application User-Interface
+#'
+#' @param request Internal parameter for `{shiny}`.
+#'     DO NOT REMOVE.
 #' @import shiny
 #' @import shinydashboard
 #' @import shinyURL
@@ -20,9 +24,10 @@
 #' @import reactable
 #' @import shinycssloaders
 #' @import magrittr
+#' @import shinymanager
 #' @importFrom shiny NS tagList
-app_ui <- function() {
-
+#' @noRd
+app_ui <- function(request) {
   # HEADER
   header <- dashboardHeader(title  = 'Recon Monitoring')
   # SIDEBAR
@@ -71,30 +76,24 @@ app_ui <- function() {
 
     tags$head(tags$style(HTML('
                                 /* logo */
-
                                 /* navbar (rest of the header) */
                                 .skin-blue .main-header .navbar {
                                 background-color: #006699;
                                 }
-
                                 /* body */
                                 .content-wrapper, .right-side {
                                 background-color: #FFFFFF;
                                 }
-
                                 .box-header h3.box-title {
                                   font-size: 24px;
                                 }
-
                                 .box-header h3 {
                                 font-weight: bold;
                                 }
-
                                 .info-box .logo {
                                 font-weight: bold;
                                 font-size: 8px;
                                 }
-
                                 '))),
 
 
@@ -160,19 +159,17 @@ app_ui <- function() {
 #' @import shiny
 #' @importFrom golem add_resource_path activate_js favicon bundle_resources
 #' @noRd
-golem_add_external_resources <- function() {
+golem_add_external_resources <- function(){
+
   add_resource_path(
-    "www",
-    app_sys("app/www")
+    'www', app_sys('app/www')
   )
 
   tags$head(
-    golem::favicon(),
-    golem::activate_js(),
-    # tags$link(rel="stylesheet", type="text/css", href="www/custom.css"),
+    favicon(),
     bundle_resources(
-      path = app_sys("app/www"),
-      app_title = "reconmonitoring"
+      path = app_sys('app/www'),
+      app_title = 'reconmonitoring'
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()

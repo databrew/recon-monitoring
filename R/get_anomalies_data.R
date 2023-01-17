@@ -1,4 +1,4 @@
-#' @description function to get anomalies data from s3
+#' Function to get anomalies data from s3
 #' @import paws
 #' @import dplyr
 #' @return tibble dataframe

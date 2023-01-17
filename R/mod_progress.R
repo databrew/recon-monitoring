@@ -71,43 +71,50 @@ mod_progress_ui <- function(id){
 
 # SERVER FOR MOST RECENT VALUE MAP
 mod_progress_server <- function(input, output, session, data){
-
+  # get household and registration forms
   hh <- get_household_forms()
   registration <- get_registration_forms()
 
+  # get chv targets based on registration forms
   chv_target <- registration %>%
-    dplyr::filter(worker_type == 'CHV') %>%
-    dplyr::group_by(wid) %>%
-    dplyr::summarise(num_households = sum(num_households,na.rm=T))
+    dplyr::filter(
+      worker_type == 'CHV',
+      ward_chv %in% hh$ward,
+      community_health_unit_chv %in%
+        hh$community_health_unit) %>%
+    dplyr::group_by(wid, ward_chv, community_health_unit_chv) %>%
+    dplyr::summarise(num_households = sum(num_households,na.rm=T)) %>%
+    dplyr::ungroup()
 
-  ward_list <- hh %>%
-    .$ward %>%
-    unique()
+  # get ward lists
+  ward_list <- c(hh$ward, chv_target$ward_chv) %>% unique()
 
-  community_health_unit_list <- hh %>%
-    .$community_health_unit %>%
-    unique()
+  # get community health unit
+  community_health_unit_list <- c(hh$community_health_unit, chv_target$community_health_unit_chv) %>% unique()
 
+  # instantiate reactive datasets
+  orig_hh_data <- reactive({hh})
+  orig_chv_target <- reactive({chv_target})
+
+  # instantate reactive values for lists
   values <- reactiveValues(
-    orig_data = hh,
-    filter_data = hh,
-    orig_chv_target = chv_target,
-    filter_chv_target = chv_target,
     ward_list = ward_list,
     community_health_unit_list = community_health_unit_list
   )
 
+  # update picker input based on lists
   observe({
     updatePickerInput(session, "ward",
-                      choices = sort(ward_list),
-                      selected = ward_list)
+                      choices = sort(values$ward_list),
+                      selected = values$ward_list)
     updatePickerInput(session, "community_health_unit",
-                      choices = sort(community_health_unit_list),
-                      selected = community_health_unit_list)
+                      choices = sort(values$community_health_unit_list),
+                      selected = values$community_health_unit_list)
   })
 
+  # observe ward selection for dependency filters
   observeEvent(input$ward, {
-    f <- values$orig_data %>%
+    f <- orig_hh_data() %>%
       dplyr::filter(ward %in% input$ward) %>%
       .$community_health_unit %>%
       unique()
@@ -116,29 +123,38 @@ mod_progress_server <- function(input, output, session, data){
                       selected = f)
   }, ignoreNULL = FALSE)
 
-  observeEvent(input$submit, {
-    values$filter_data <- values$orig_data %>%
+  # filter CHVs on household data based on wards and chu
+  filter_hh_data <- eventReactive(input$submit, {
+    orig_hh_data() %>%
       dplyr::filter(ward %in% input$ward) %>%
       dplyr::filter(
         community_health_unit %in%
           input$community_health_unit)
-    values$filter_chv_target <- values$orig_chv_target
+  }, ignoreNULL=FALSE)
+
+  # filter CHV targets dynamically based on inputs
+  filter_chv_target <- eventReactive(input$submit, {
+    orig_chv_target() %>%
+      dplyr::filter(ward_chv %in% input$ward) %>%
+      dplyr::filter(community_health_unit_chv %in% input$community_health_unit)
   }, ignoreNULL=FALSE)
 
 
   # ---- RENDER PLOT FROM REACTIVE DATA ---- #
   output$total_chv <- renderInfoBox({
     if(input$submit == 0){
-      data <- values$orig_chv_target
+      chv_data <- orig_chv_target()
+      hh_data <- orig_hh_data()
     }else{
-      data <- values$filter_chv_target
+      chv_data <- filter_chv_target()
+      hh_data <- filter_hh_data()
     }
-    num_chv <- data$wid %>%
+    num_chv <- hh_data$wid %>%
       unique() %>%
       length()
 
     infoBox(
-      "Total CHV",
+      "Number CHV with Submitted Forms",
       h3(num_chv),
       icon = icon("user"),
       color = 'black',
@@ -148,9 +164,9 @@ mod_progress_server <- function(input, output, session, data){
 
   output$total_hh <- renderInfoBox({
     if(input$submit == 0){
-      data <- values$orig_data
+      data <- orig_hh_data()
     }else{
-      data <- values$filter_data
+      data <- filter_hh_data()
     }
 
     total_hh <- data$hh_id %>%
@@ -158,7 +174,7 @@ mod_progress_server <- function(input, output, session, data){
       length()
 
     infoBox(
-      "Household Forms Submitted by CHV",
+      "Number of Household Forms Submitted",
       h3(total_hh),
       icon = icon("house"),
       color = 'black',
@@ -168,11 +184,11 @@ mod_progress_server <- function(input, output, session, data){
 
   output$percent_hh <- renderInfoBox({
     if(input$submit == 0){
-      chv_data <- values$orig_chv_target
-      hh_data <- values$orig_data
+      chv_data <- orig_chv_target()
+      hh_data <- orig_hh_data()
     }else{
-      chv_data <- values$filter_chv_target
-      hh_data <- values$filter_data
+      chv_data <- filter_chv_target()
+      hh_data <- filter_hh_data()
     }
     total_hh <- hh_data %>%
       .$hh_id %>%
@@ -190,7 +206,7 @@ mod_progress_server <- function(input, output, session, data){
 
 
     title <- tags$div(
-      glue::glue("% to Household Recon Target"))
+      glue::glue("% to Recon Target"))
 
 
     infoBox(
@@ -202,12 +218,12 @@ mod_progress_server <- function(input, output, session, data){
     )
   })
 
-
+  # map plots
   output$map_plot <- renderLeaflet({
     if(input$submit == 0){
-      data <- values$orig_data
+      data <- orig_hh_data()
     }else{
-      data <- values$filter_data
+      data <- filter_hh_data()
     }
 
     content <- paste0(
@@ -239,15 +255,16 @@ mod_progress_server <- function(input, output, session, data){
   output$cumulative_submission <- renderPlotly({
 
     if(input$submit == 0){
-      data <- values$orig_data
+      data <- orig_hh_data()
     }else{
-      data <- values$filter_data
+      data <- filter_hh_data()
     }
     summary <- data %>%
       tibble::as_tibble(.name_repair = "unique") %>%
       dplyr::mutate(day = lubridate::as_date(SubmissionDate)) %>%
       dplyr::group_by(day) %>%
-      dplyr::summarise(n = n())
+      dplyr::summarise(n = n()) %>%
+      dplyr::mutate(n = rollapplyr(n, FUN = sum, width = nrow(.), partial = TRUE))
     p <- ggplotly(summary %>%
                     ggplot2::ggplot(aes(x = day, y = n)) +
                     geom_line(color = 'darkblue') +
@@ -262,9 +279,9 @@ mod_progress_server <- function(input, output, session, data){
 
   output$submission_by_day <- renderPlotly({
     if(input$submit == 0){
-      data <- values$orig_data
+      data <- orig_hh_data()
     }else{
-      data <- values$filter_data
+      data <- filter_hh_data()
     }
     summary <- data %>%
       dplyr::group_by(day_of_week = lubridate::wday(
@@ -286,10 +303,10 @@ mod_progress_server <- function(input, output, session, data){
                                   ord = row_number(),
                                   day_of_week = fct_reorder(day_of_week, ord)) %>%
                     ggplot(aes(x = day_of_week, y = n)) +
-                    geom_bar(stat = 'identity', alpha = 0.9, fill = 'dodgerblue4') +
+                    geom_bar(stat = 'identity', fill = 'dodgerblue4') +
                     theme_minimal() +
                     labs(x = "", y = "") +
-                    theme(axis.text.x = element_text(angle=45, hjust=1),
+                    theme(axis.text.x = element_text(hjust=1),
                           panel.grid.major.x = element_blank() ,
                           legend.position = "none")
                     )
@@ -298,23 +315,23 @@ mod_progress_server <- function(input, output, session, data){
 
   output$submission_by_filter <- renderPlotly({
     if(input$submit == 0){
-      data <- values$orig_data
+      data <- orig_hh_data()
     }else{
-      data <- values$filter_data
+      data <- filter_hh_data()
     }
     summary <- data %>%
       tibble::as_tibble(.name_repair = "unique") %>%
       dplyr::group_by(!!sym(input$filter_group)) %>%
       dplyr::summarise(n = n())
     p <- ggplotly(summary %>%
-                    ggplot2::ggplot(aes_string(x = input$filter_group,
-                                               y = "n",
+                    ggplot2::ggplot(aes_string(y = input$filter_group,
+                                               x = "n",
                                                fill = input$filter_group)) +
-                    geom_bar(stat = 'identity', alpha = 0.9) +
+                    geom_bar(stat = 'identity') +
                     theme_minimal() +
                     labs(x = "", y = "") +
-                    theme(axis.text.x = element_text(angle=45, hjust=1),
-                          panel.grid.major.x = element_blank(),
+                    theme(axis.text.y = element_text(hjust=1),
+                          panel.grid.major.y = element_blank(),
                           legend.position = "none") +
                     scale_fill_brewer(palette="Dark2")
                     )

@@ -2,7 +2,6 @@
 #'
 #' @param ... arguments to pass to golem_opts.
 #' See `?golem::get_golem_options` for more details.
-#' @inheritParams shiny::shinyApp
 #'
 #' @export
 #' @importFrom shiny shinyApp
@@ -10,9 +9,9 @@
 run_app <- function(...){
   with_golem_options(
     app = shinyApp(
-      ui = app_ui,
+      ui = shinymanager::secure_app(app_ui),
       server = app_server,
     ),
-    golem_opts = list()
+    golem_opts = list(...)
   )
 }

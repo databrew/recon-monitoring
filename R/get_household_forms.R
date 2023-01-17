@@ -1,4 +1,4 @@
-#' @description function to get household data from s3
+#' Function to get household data from s3
 #' @import paws
 #' @import dplyr
 #' @return tibble dataframe
@@ -19,7 +19,9 @@ get_household_forms <- function(){
       community_health_unit = ifelse(community_health_unit == "", "N/A", community_health_unit),
       village = ifelse(village == "", "N/A", village),
       house_wall_material = ifelse(nchar(house_wall_material_other) > 0, house_wall_material_other, house_wall_material),
-      roof_type = ifelse(nchar(roof_type_other) > 0, roof_type_other, roof_type)) %>%
+      roof_type = ifelse(nchar(roof_type_other) > 0, roof_type_other, roof_type),
+      community_health_unit = stringr::str_replace(community_health_unit, " ", "-")
+    ) %>%
     dplyr::select(
       todays_date,
       have_wid,

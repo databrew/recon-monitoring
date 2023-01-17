@@ -38,7 +38,9 @@ Imports:
     stringr,
     tibble,
     tidyr,
-    waiter
+    waiter,
+    shinymanager,
+    zoo
 VignetteBuilder: 
     knitr
 Remotes:

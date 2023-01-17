@@ -1,4 +1,4 @@
-#' @description function to get household data from s3
+#' Function to get household data from s3
 #' @import paws
 #' @import dplyr
 #' @import lubridate
