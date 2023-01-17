@@ -7,7 +7,7 @@ get_object_update_time <- function(){
   key_list <-list(
     registration = "kwale/clean-form/reconaregistration/reconaregistration.csv",
     household = "kwale/clean-form/reconbhousehold/reconbhousehold.csv",
-    anomalies = "kwale/anomalies/anomalies.csv"
+    anomalies = "kwale/anomalies/anomalies-identification-history-summary/anomalies-identification-history-summary.csv"
   )
   purrr::map_dfr(
     names(key_list),
