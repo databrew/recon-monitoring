@@ -8,6 +8,9 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./deploy
     steps:
       ## use docker
       - name: Set up QEMU
@@ -22,13 +25,13 @@ jobs:
       ## checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v3
-      - name: Create R deployment assets
-        run: golem::add_dockerfile_with_renv(output_dir = "deploy")
-        shell: Rscript {0}
       - name: Build Docker Base
-        run: docker build -f deploy/Dockerfile_base --progress=plain -t reconmonitoring_base .
+        run: docker build -f Dockerfile_base --progress=plain -t reconmonitoring_base .
       - name: Build Docker file for recon
-        run: docker build -f deploy/Dockerfile --progress=plain -t databrewllc/reconmonitoring:latest .
+        run: docker build -f Dockerfile --progress=plain -t databrewllc/reconmonitoring:production .
       - name: Push to Dockerhub
-        run: docker push databrewllc/reconmonitoring:latest
-
+        run: docker push databrewllc/reconmonitoring:production
+      - name: Tag image based on commit SHA
+        run: docker image tag databrewllc/reconmonitoring:production databrewllc/reconmonitoring:${GITHUB_SHA::7}
+      - name: Push to Dockerhub with commit sha for version tracking
+        run: docker push databrewllc/reconmonitoring:${GITHUB_SHA::7}
