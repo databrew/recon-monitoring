@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./deploy
+        working-directory: deploy
     steps:
       ## use docker
       - name: Set up QEMU
@@ -25,10 +25,14 @@ jobs:
       ## checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v3
+      - name: Create R deployment assets
+        uses: r-lib/actions/setup-r@v2
+        run: golem::add_dockerfile_with_renv(output_dir = "deploy")
+        shell: Rscript {0}
       - name: Build Docker Base
-        run: docker build -f Dockerfile_base --progress=plain -t reconmonitoring_base .
+        run: docker build -f deploy/Dockerfile_base --progress=plain -t reconmonitoring_base .
       - name: Build Docker file for recon
-        run: docker build -f Dockerfile --progress=plain -t databrewllc/reconmonitoring:latest .
+        run: docker build -f deploy/Dockerfile --progress=plain -t databrewllc/reconmonitoring:latest .
       - name: Push to Dockerhub
         run: docker push databrewllc/reconmonitoring:latest
 
