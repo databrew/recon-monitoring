@@ -42,9 +42,9 @@ We are using AWS IAM roles in our instance, no need to pass in credentials yaml 
 
 **Process Flow**:
 
-1. User make changes on the R scripts
+1. User make changes on the shiny modules to adjust based on customer use case and desired visuals on the dashboard
 
-2. Code-review & performance optimization
+2. Code-review
 
 3. Once code is reviewed and finalized do pre-deployment by running:
 
@@ -52,17 +52,32 @@ We are using AWS IAM roles in our instance, no need to pass in credentials yaml 
 golem::add_dockerfile_with_renv(output_dir = "deploy")
 ```
 
-This command will create all the assets related to deploying Shiny App to Dockerhub
+This command will create all the assets related to deploying Shiny App to Dockerhub under /deploy folder. Specifically it will create the required: 
 
+- `.gz` extension files: Binary for the Golem Package
 
-### Deployment Options
-More details here in [Golem deployment guide](https://cran.r-project.org/web/packages/golem/vignettes/c_deploy.html)
+- `renv.lock.prod` the renv.lock used for production environment
 
-#### Option 1: DataBrew Shiny Server (AWS EC2)
-TBD Video
+- `Dockerfile_base` is what is the required package installation listed in Dockerfile
 
-#### Option 2: DataBrew Shiny Cluster (AWS ECS)
-TBD Video
+- `Dockerfile` combines `.gz` binary, `Renv` environment, and `base Dockerfile` to create all the deployment environment to successfully deploy this app into ECS Containers
+
+Check this video for walkthrough
+
+### FAQs:
+
+**Why ECS over EC2?**
+
+- ECS is chosen in this process as how it can visualize the deployment in the console
+- Assuming using lowest tier, ECS process is slightly more expensive but it provides higher capacity in user concurrency
+- Isolated and can be terminated easily by console admins when project has been delivered
+
+**What happens if the app overloads?**
+
+- ShinyApps are being deployed as a [ECS Service](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html)
+- In the scenario that the app is overloaded w/ CPU or memory, Shiny App will re-deploy itself to get itself to minimum one running instance
+- We will work proactively to add in more instance with load balancers as needed if Shiny Apps breaks in high frequency due to CPU/memory overload
+
 
 
 
