@@ -20,7 +20,7 @@ mod_landing_page_ui <- function(id){
       div("This dashboard will monitor Kwale Recon. It tracks recon Progress, Internet Connectivity, Fieldworker Performance, Anomalies of Kwale recon"),
       div("\n"),
       div("- Progress: Tracks progress of how many household forms submitted, submission location, by how many CHVs, and % comparison to our recon target"),
-      div("- Fieldworker Performance: Tracks fieldworker performances (% to recon target) based on hierarchial structure from CHA -> CHV -> Household Forms Collection"),
+      div("- Fieldworker Performance: Tracks fieldworker performances (% to recon target) based on hierarchial structure from CHA to CHV to Household Forms Collection"),
       div("- Anomalies: Helps our anomalies resolver group to track their anomalies bug bashing"),
       div("- Internet Coverage: Tracks internet connectivity of data collection process"),
       br(),
@@ -32,7 +32,11 @@ mod_landing_page_ui <- function(id){
       reactableOutput(ns("update_table")),
       br(),
       h2("Resources"),
-      div("GitHub Repository: https://github.com/databrew/recon-monitoring")
+      tags$a(href="https://github.com/databrew/recon-monitoring",
+             "Link to GitHub Package"),
+      br(),
+      tags$a(href="https://trello.com/b/s98kB9HF/bohemia",
+             "Bug Reports & Feature Requests")
     )
 
 }

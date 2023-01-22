@@ -158,7 +158,8 @@
         "bit64",
         "blob",
         "memoise",
-        "pkgconfig"
+        "pkgconfig",
+        "plogr"
       ]
     },
     "Rcpp": {
@@ -1284,6 +1285,14 @@
         "rprojroot",
         "withr"
       ]
+    },
+    "plogr": {
+      "Package": "plogr",
+      "Version": "0.2.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "09eb987710984fc2905c7129c7d85e65",
+      "Requirements": []
     },
     "plotly": {
       "Package": "plotly",
