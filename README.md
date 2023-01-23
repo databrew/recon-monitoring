@@ -62,7 +62,7 @@ This command will create all the assets related to deploying Shiny App to Docker
 
 - `Dockerfile` combines `.gz` binary, `Renv` environment, and `base Dockerfile` to create all the deployment environment to successfully deploy this app into ECS Containers
 
-Check this video for walkthrough
+Check this [youtube video](https://www.youtube.com/watch?v=5kynbRXEkEY&ab_channel=arytontediarjo) for walkthrough
 
 ### FAQs:
 
